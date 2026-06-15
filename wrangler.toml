@@ -1,0 +1,26 @@
+name = "daily-log-push"
+main = "worker.js"
+compatibility_date = "2025-06-01"
+
+# Runs every minute; the worker sends a push only to devices whose chosen
+# local time matches the current minute (and hasn't been sent yet today).
+[triggers]
+crons = ["* * * * *"]
+
+# KV namespace that stores push subscriptions.
+# Create it with:  npx wrangler kv namespace create SUBS
+# then paste the returned id below.
+[[kv_namespaces]]
+binding = "SUBS"
+id = "PASTE_YOUR_KV_NAMESPACE_ID"
+
+[vars]
+# Origin that's allowed to call /subscribe (your GitHub Pages site).
+ALLOWED_ORIGIN = "https://lnk111.github.io"
+# Contact address required by the Web Push (VAPID) spec.
+VAPID_SUBJECT = "mailto:you@designfor.kr"
+# VAPID public key (not secret). Paste the public key you generate.
+VAPID_PUBLIC_KEY = "PASTE_YOUR_VAPID_PUBLIC_KEY"
+
+# VAPID_PRIVATE_KEY is a secret — do NOT put it here. Set it with:
+#   npx wrangler secret put VAPID_PRIVATE_KEY
