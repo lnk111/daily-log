@@ -361,7 +361,7 @@
         <section class="section fin-head">
           <h2>가계부 <span class="en">매월 1일 투자·적금 0원 초기화</span></h2>
           <div class="fin-cards">
-            <div class="fin-card"><div class="fl">생활비 잔액 (오늘)</div><div class="fv" id="finBalance">0원</div><div class="fh" id="finCarry">전일 이월 0</div></div>
+            <div class="fin-card"><div class="fl">쓸 수 있는 생활비 (오늘)</div><div class="fv" id="finBalance">0원</div><div class="fh" id="finCarry">수입−지출 0 중</div></div>
             <div class="fin-card"><div class="fl">투자 (이번 달)</div><div class="fv" id="finInvest">0</div><div class="fh" id="finWait">대기금 0</div></div>
             <div class="fin-card"><div class="fl">적금 (이번 달)</div><div class="fv" id="finSave">0원</div><div class="fh">이번 달 누적</div></div>
           </div>
@@ -867,6 +867,8 @@
     return s;
   }
   function getAlloc(ym,acct){ const m=allocs[ym]; return (m&&typeof m==="object")?(+m[acct]||0):0; }
+  function allocTotal(ym){ const m=allocs[ym]; let s=0; if(m&&typeof m==="object") for(const k in m) s+=(+m[k]||0); return s; }
+  function cumKind(dateStr,kind){ let s=0; for(const d in entries){ if(!isDate(d)||d>dateStr) continue; const f=entries[d]&&entries[d].fin; if(f&&f[kind]) s+=finSum(f[kind]); } return s; }
 
   function finRow(label,amtText,cls,kind,idx){
     return '<div class="fin-row"><span class="fin-lab">'+esc(label)+'</span>'
@@ -882,15 +884,20 @@
     const bal=balanceThrough(current);
     const carry=bal-todayNet;
     const sav=monthSum(ym,"sav");
+    const wait=Math.max(0, allocTotal(ym)-monthSum(ym,"buy"));
+    const carve=cumKind(current,"sav")+cumKind(current,"buy")+wait;  // 적금 누적 + 매수 누적 + 이번 달 대기금
+    const spend=bal-carve;
 
-    gid("finBalance").textContent=won(bal);
-    gid("finCarry").textContent="전일 이월 "+num(carry);
+    gid("finBalance").textContent=won(spend);
+    gid("finCarry").textContent="수입−지출 "+num(bal)+" 중";
     gid("finSave").textContent=won(sav);
 
     let life='<div class="fin-row"><span class="fin-lab fin-carry">전일 이월</span><span class="fin-amt fin-carry">'+won(carry)+'</span></div>';
     curFin.inc.forEach((e,i)=>{ life+=finRow(e.label||(e.sell?"매도 입금":"수입"),"＋"+won(e.amount),"pos","inc",i); });
     curFin.exp.forEach((e,i)=>{ life+=finRow(e.label||"지출","－"+won(e.amount),"neg","exp",i); });
-    life+='<div class="fin-row"><span class="fin-lab fin-total">오늘 잔액 → 내일 이월</span><span class="fin-amt fin-total">'+won(bal)+'</span></div>';
+    life+='<div class="fin-row"><span class="fin-lab">오늘 잔액 → 내일 이월</span><span class="fin-amt">'+won(bal)+'</span></div>';
+    life+='<div class="fin-row"><span class="fin-lab fin-carry">－ 적금·투자로 묶인 돈</span><span class="fin-amt fin-carry">'+won(carve)+'</span></div>';
+    life+='<div class="fin-row"><span class="fin-lab fin-total">＝ 지금 쓸 수 있는 돈</span><span class="fin-amt fin-total">'+won(spend)+'</span></div>';
     gid("finLifeList").innerHTML=life;
 
     // 투자 — 계좌별 행
