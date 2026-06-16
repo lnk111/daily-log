@@ -405,6 +405,21 @@
     loading=false; checkDue();
   }
 
+  /* Reflect remote (Firebase) changes for the current date WITHOUT redrawing
+     the whole sheet — only touch fields whose text actually changed and that
+     aren't currently being edited. This removes the flicker. */
+  function syncDayIntoDOM(){
+    const data=entries[current]||{};
+    const active=document.activeElement;
+    FIELDS.forEach(f=>{
+      const el=els[f];
+      if(el===active) return;            // never disturb the field being typed in
+      const nv=data[f]||"";
+      if(el.value!==nv){ el.value=nv; grow(el); }   // update only if different
+    });
+    checkDue();
+  }
+
   function persistDay(date,data,empty){
     const key="log:"+date;
     if(empty){ delete entries[date]; store.set(key,""); if(fb) fb.child(date).remove(); }
@@ -664,8 +679,7 @@
       fb.on("value",snap=>{
         const val=snap.val()||{};
         entries=val;
-        const editing=document.activeElement&&document.activeElement.tagName==="TEXTAREA";
-        if(currentView==="record"&&!editing) loadDayFromCache();
+        if(currentView==="record") syncDayIntoDOM();
         if(currentView==="calendar") renderCalendar();
         if(currentView==="review") renderReview();
         checkDue();
