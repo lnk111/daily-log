@@ -166,7 +166,7 @@
   .acct-row:last-child{border-bottom:none;}
   .acct-name{flex:1; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .acct-mid{font-size:12.5px; color:var(--sub); white-space:nowrap;}
-  .acct-alloc{width:104px; font-family:inherit; font-size:13px; font-weight:600; border:1px solid var(--rule); background:var(--bg); border-radius:8px; padding:6px 8px; color:var(--ink); text-align:right; outline:none; flex:none;}
+  .acct-alloc{width:128px; font-family:inherit; font-size:13px; font-weight:600; border:1px solid var(--rule); background:var(--bg); border-radius:8px; padding:6px 8px; color:var(--ink); text-align:right; outline:none; flex:none;}
   .acct-alloc:focus{border-color:var(--accent);}
   .acct-x{cursor:pointer; color:var(--faint); font-size:12px; line-height:1; padding:3px 5px; border-radius:6px; flex:none;}
   .acct-x:hover{background:var(--accent-soft); color:var(--prob);}
@@ -533,7 +533,7 @@
       const nv=data[f]||"";
       if(el.value!==nv){ el.value=nv; grow(el); }   // update only if different
     });
-    const editingFin=active&&active.closest&&active.closest(".fin-add, .fin-alloc");
+    const editingFin=active&&active.closest&&active.closest(".fin-add, .fin-alloc, .acct-alloc, .fin-acct-edit, #finAcctList");
     if(!editingFin){ curFin=cloneFin(data.fin); renderFinance(); }
     checkDue();
   }
@@ -900,7 +900,7 @@
       rows+='<div class="acct-row">'
         +'<span class="acct-name">'+esc(acct)+'</span>'
         +'<span class="acct-mid" id="acctMid'+i+'"></span>'
-        +'<input class="acct-alloc" data-i="'+i+'" inputmode="numeric" placeholder="배정"'+(a?' value="'+num(a)+'"':'')+' />'
+        +'<input class="acct-alloc" data-i="'+i+'" inputmode="numeric" placeholder="배정할 금액"'+(a?' value="'+num(a)+'"':'')+' />'
         +'<span class="acct-x" data-i="'+i+'" aria-label="계좌 삭제">✕</span>'
         +'</div>';
     });
@@ -980,15 +980,24 @@
     });
   });
 
-  // 계좌별 배정 입력 (타이핑 중엔 행을 다시 그리지 않고 숫자만 갱신)
+  // 계좌별 배정 입력 (타이핑 중엔 행을 다시 그리지 않고 숫자만 갱신, 저장은 디바운스)
+  let allocTimer=null;
   gid("finAcctList").addEventListener("input",e=>{
     const inp=e.target.closest(".acct-alloc"); if(!inp) return;
     const ym=current.slice(0,7); const acct=acctList[+inp.dataset.i]; if(!acct) return;
     if(!allocs[ym]||typeof allocs[ym]!=="object") allocs[ym]={};
     const v=parseAmt(inp.value);
     if(v) allocs[ym][acct]=v; else delete allocs[ym][acct];
-    persistAllocs(); updateInvestTotals();
+    updateInvestTotals();
+    clearTimeout(allocTimer); allocTimer=setTimeout(persistAllocs,600);
   });
+  gid("finAcctList").addEventListener("blur",e=>{
+    const inp=e.target&&e.target.closest&&e.target.closest(".acct-alloc"); if(!inp) return;
+    const ym=current.slice(0,7); const acct=acctList[+inp.dataset.i];
+    const v=getAlloc(ym,acct);
+    inp.value=v?num(v):"";                 // 입력 끝나면 콤마로 정리
+    clearTimeout(allocTimer); persistAllocs();
+  },true);
   // 계좌 삭제
   gid("finAcctList").addEventListener("click",e=>{
     const x=e.target.closest(".acct-x"); if(!x) return;
