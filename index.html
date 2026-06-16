@@ -125,6 +125,46 @@
     background-size:100% var(--row); background-position:0 6px; background-attachment:local;}
   .ruled::placeholder{color:var(--faint);}
   .kpt-head{margin-top:42px; padding-top:4px;}
+
+  /* ----- 가계부 (finance) ----- */
+  .fin-head{margin-top:44px; padding-top:4px;}
+  .fin-cards{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:8px 0 16px;}
+  .fin-cards4{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:8px 0 22px;}
+  .fin-card{background:var(--accent-soft); border-radius:12px; padding:12px;}
+  .fin-card .fl{font-size:12px; color:var(--sub); margin-bottom:4px;}
+  .fin-card .fv{font-size:19px; font-weight:700; color:var(--ink); letter-spacing:-.01em; line-height:1.2;}
+  .fin-card .fv .sub{font-size:12px; font-weight:500; color:var(--faint);}
+  .fin-card .fh{font-size:11px; color:var(--faint); margin-top:3px;}
+  .fin-blk{background:var(--paper); border:1px solid var(--rule); border-radius:14px; padding:14px 16px; margin-bottom:12px;}
+  .fin-bh{display:flex; align-items:center; justify-content:space-between; font-size:15px; font-weight:700; margin-bottom:4px; gap:8px; flex-wrap:wrap;}
+  .fin-row{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 0; font-size:14px; border-bottom:1px solid var(--rule);}
+  .fin-row:last-child{border-bottom:none;}
+  .fin-lab{flex:1; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .fin-amt{font-weight:600; white-space:nowrap;}
+  .fin-amt.pos,.fin-lab.pos{color:var(--keep);} .fin-amt.neg{color:var(--prob);} .fin-amt.inv{color:var(--try);} .fin-amt.acc{color:var(--accent);}
+  .fin-carry{color:var(--sub);} .fin-total{font-weight:700; color:var(--ink);}
+  .fin-row .x{cursor:pointer; color:var(--faint); font-size:13px; line-height:1; padding:3px 6px; border-radius:6px; flex:none;}
+  .fin-row .x:hover{background:var(--accent-soft); color:var(--prob);}
+  .fin-bar{height:10px; border-radius:6px; background:var(--accent-soft); overflow:hidden; margin:10px 0 6px;}
+  .fin-bar-fill{height:100%; background:var(--try); width:0%; transition:width .25s ease;}
+  .fin-bar-cap{display:flex; justify-content:space-between; font-size:12px; color:var(--sub); margin-bottom:6px;}
+  .fin-bar-cap .e{color:var(--try); font-weight:600;}
+  .fin-add{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;}
+  .fin-add input, .fin-add select{font-family:inherit; font-size:14px; border:1px solid var(--rule); background:var(--bg); border-radius:9px; padding:8px 10px; color:var(--ink); outline:none;}
+  .fin-add input:focus, .fin-add select:focus{border-color:var(--accent);}
+  .fin-i-label{flex:1; min-width:110px;}
+  .fin-i-amt{width:92px; text-align:right;}
+  .fin-i-btn{font-family:inherit; font-weight:600; font-size:13px; border:1px solid var(--ink); background:var(--ink); color:#fff; border-radius:9px; padding:8px 14px; cursor:pointer;}
+  .fin-i-btn:hover{opacity:.88;} .fin-i-btn:active{transform:scale(.97);}
+  .fin-alloc{font-size:13px; font-weight:400; color:var(--sub); display:inline-flex; align-items:center; gap:6px;}
+  .fin-alloc input{width:104px; font-family:inherit; font-size:14px; font-weight:600; border:1px solid var(--rule); background:var(--bg); border-radius:9px; padding:6px 9px; color:var(--ink); text-align:right; outline:none;}
+  .fin-alloc input:focus{border-color:var(--accent);}
+  .fin-note{font-size:11.5px; color:var(--faint); margin-top:8px; line-height:1.5;}
+  .fin-empty{font-size:13px; color:var(--faint); padding:7px 0;}
+  @media (max-width:560px){
+    .fin-card .fv{font-size:17px;}
+    .fin-cards4{grid-template-columns:repeat(2,1fr);}
+  }
   .kpt-item{margin-top:18px;}
   .kpt-item .lab{font-size:14px; font-weight:600; margin-bottom:7px;}
   .lab.keep{color:var(--keep);} .lab.problem{color:var(--prob);} .lab.try{color:var(--try);}
@@ -300,6 +340,54 @@
           <div class="kpt-item"><div class="lab problem">Problem</div><textarea class="kpt-line" data-field="problem" rows="1" placeholder="아쉽거나 막혔던 것"></textarea></div>
           <div class="kpt-item"><div class="lab try">Try</div><textarea class="kpt-line" data-field="try" rows="1" placeholder="다음에 시도해볼 것"></textarea></div>
         </section>
+
+        <section class="section fin-head">
+          <h2>가계부 <span class="en">매월 1일 투자·적금 0원 초기화</span></h2>
+          <div class="fin-cards">
+            <div class="fin-card"><div class="fl">생활비 잔액 (오늘)</div><div class="fv" id="finBalance">0원</div><div class="fh" id="finCarry">전일 이월 0</div></div>
+            <div class="fin-card"><div class="fl">투자 (이번 달)</div><div class="fv" id="finInvest">0</div><div class="fh" id="finWait">대기금 0</div></div>
+            <div class="fin-card"><div class="fl">적금 (이번 달)</div><div class="fv" id="finSave">0원</div><div class="fh">이번 달 누적</div></div>
+          </div>
+
+          <div class="fin-blk">
+            <div class="fin-bh">생활비 · 수입/지출</div>
+            <div id="finLifeList"></div>
+            <div class="fin-add">
+              <input type="text" class="fin-i-label" id="lifeLabel" placeholder="내용 (예: 점심, 월급)" />
+              <input type="text" inputmode="numeric" class="fin-i-amt" id="lifeAmt" placeholder="금액" />
+              <select class="fin-i-sel" id="lifeKind"><option value="inc">수입</option><option value="exp">지출</option></select>
+              <button class="fin-i-btn" id="lifeAdd">추가</button>
+            </div>
+          </div>
+
+          <div class="fin-blk">
+            <div class="fin-bh">투자
+              <span class="fin-alloc">이번 달 배정 <input type="text" inputmode="numeric" id="allocInput" placeholder="0" /> 원</span>
+            </div>
+            <div class="fin-bar"><div class="fin-bar-fill" id="finBarFill"></div></div>
+            <div class="fin-bar-cap"><span class="e" id="finExec">집행 0</span><span id="finWait2">대기 0</span></div>
+            <div id="finInvList"></div>
+            <div class="fin-add">
+              <input type="text" class="fin-i-label" id="invLabel" placeholder="내용 (예: ETF 반도체)" />
+              <input type="text" inputmode="numeric" class="fin-i-amt" id="invAmt" placeholder="금액" />
+              <select class="fin-i-sel" id="invKind"><option value="buy">매수</option><option value="sell">매도</option></select>
+              <button class="fin-i-btn" id="invAdd">추가</button>
+            </div>
+            <div class="fin-note">매수는 투자금에서 차감돼 집행이 늘어요 · 매도는 수입(생활비)으로 들어가요</div>
+          </div>
+
+          <div class="fin-blk">
+            <div class="fin-bh">적금 <span class="fin-alloc" id="savTag">이번 달 0원</span></div>
+            <div id="finSavList"></div>
+            <div class="fin-add">
+              <input type="text" class="fin-i-label" id="savLabel" placeholder="내용 (예: 정기적금)" />
+              <input type="text" inputmode="numeric" class="fin-i-amt" id="savAmt" placeholder="금액" />
+              <button class="fin-i-btn" id="savAdd">추가</button>
+            </div>
+          </div>
+
+          <div class="fin-note">주간·월간 회고에 수입·지출·투자·적금 합계가 모여서 보여요.</div>
+        </section>
       </div>
     </section>
 
@@ -341,6 +429,7 @@
           </div>
         </div>
         <div class="rev-stat" id="revStat"></div>
+        <div class="fin-cards4" id="revFinCards"></div>
 
         <div class="kgroup keep"><div class="kh"><span class="bar2"></span>Keep · 계속할 것</div><div id="revKeep"></div></div>
         <div class="kgroup problem"><div class="kh"><span class="bar2"></span>Problem · 아쉬운 것</div><div id="revProblem"></div></div>
@@ -379,6 +468,8 @@
   let currentView="record";
   let loading=false, saveTimer=null;
   let fb=null;           // firebase database ref (logs/{code}) when connected
+  let curFin=emptyFin(); // finance entries for the day on screen
+  let allocs={};         // { 'YYYY-MM': 투자 배정금액 }
 
   /* ---------- date helpers ---------- */
   const WD=["일","월","화","수","목","금","토"];
@@ -402,6 +493,8 @@
     loading=true;
     const data=entries[current]||{};
     FIELDS.forEach(f=>{els[f].value=data[f]||"";grow(els[f]);});
+    curFin=cloneFin(data.fin);
+    renderFinance();
     loading=false; checkDue();
   }
 
@@ -417,6 +510,8 @@
       const nv=data[f]||"";
       if(el.value!==nv){ el.value=nv; grow(el); }   // update only if different
     });
+    const editingFin=active&&active.closest&&active.closest(".fin-add, .fin-alloc");
+    if(!editingFin){ curFin=cloneFin(data.fin); renderFinance(); }
     checkDue();
   }
 
@@ -428,6 +523,7 @@
   function flushSave(){
     const data={}; let empty=true;
     FIELDS.forEach(f=>{const v=els[f].value;data[f]=v;if(v.trim())empty=false;});
+    if(finHasContent(curFin)){ data.fin=curFin; empty=false; }
     persistDay(current,data,empty);
     showChip(fb?"동기화됨":"저장됨", fb?"cloud":"check");
     checkDue();
@@ -539,6 +635,7 @@
     document.getElementById("revTitle").textContent=periodLabel(r);
     const buckets={keep:[],problem:[],try:[]};
     let days=0;
+    let fInc=0,fExp=0,fBuy=0,fSav=0;
     const cur=new Date(r.start);
     while(cur<=r.end){
       const ds=ymd(cur), o=entries[ds];
@@ -546,11 +643,18 @@
         days++;
         ["keep","problem","try"].forEach(k=>{ const v=(o[k]||"").trim(); if(v) buckets[k].push({date:ds,text:v}); });
       }
+      const f=o&&o.fin;
+      if(f){ fInc+=finSum(f.inc); fExp+=finSum(f.exp); fBuy+=finSum(f.buy); fSav+=finSum(f.sav); }
       cur.setDate(cur.getDate()+1);
     }
     const span=revMode==="week"?7:(r.end.getDate());
     document.getElementById("revStat").innerHTML="이 기간 <b>"+days+"</b>일 기록 · 총 "+span+"일 중";
+    document.getElementById("revFinCards").innerHTML=
+      revFinCard("수입",fInc)+revFinCard("지출",fExp)+revFinCard("투자 집행",fBuy)+revFinCard("적금",fSav);
     fill("revKeep",buckets.keep); fill("revProblem",buckets.problem); fill("revTry",buckets.try);
+  }
+  function revFinCard(label,val){
+    return '<div class="fin-card"><div class="fl">'+label+'</div><div class="fv" style="font-size:15px">'+won(val)+'</div></div>';
   }
   function fill(id,list){
     const box=document.getElementById(id); box.innerHTML="";
@@ -678,6 +782,8 @@
       fb=db.ref("logs/"+code);
       fb.on("value",snap=>{
         const val=snap.val()||{};
+        allocs=val._alloc||{}; delete val._alloc;
+        store.set("alloc",JSON.stringify(allocs));
         entries=val;
         if(currentView==="record") syncDayIntoDOM();
         if(currentView==="calendar") renderCalendar();
@@ -705,11 +811,121 @@
     if(raw){ try{ const s=JSON.parse(raw); if(s&&s.code&&s.cfg){ syncCode.value=s.code; syncCfg.value=JSON.stringify(s.cfg,null,2); connect(s.cfg,s.code); } }catch(e){} }
   }
 
+  /* ===================== 가계부 (FINANCE) ===================== */
+  function gid(id){ return document.getElementById(id); }
+  function emptyFin(){ return {inc:[],exp:[],buy:[],sav:[]}; }
+  function cloneFin(f){ return f ? {inc:(f.inc||[]).slice(),exp:(f.exp||[]).slice(),buy:(f.buy||[]).slice(),sav:(f.sav||[]).slice()} : emptyFin(); }
+  function finSum(arr){ let s=0; if(arr) for(const e of arr) s+=(+e.amount||0); return s; }
+  function finHasContent(f){ return !!(f && (finSum(f.inc)||finSum(f.exp)||finSum(f.buy)||finSum(f.sav))); }
+  function won(n){ return Math.round(n||0).toLocaleString("ko-KR")+"원"; }
+  function num(n){ return Math.round(n||0).toLocaleString("ko-KR"); }
+  function parseAmt(s){ return Math.round(Math.abs(parseFloat(String(s).replace(/[^0-9.]/g,""))||0)); }
+  function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+  const isDate=(d)=>/^\d{4}-\d{2}-\d{2}$/.test(d);
+
+  function balanceThrough(dateStr){
+    let bal=0;
+    for(const d in entries){ if(!isDate(d)||d>dateStr) continue; const f=entries[d]&&entries[d].fin; if(f) bal+=finSum(f.inc)-finSum(f.exp); }
+    return bal;
+  }
+  function monthSum(ym,kind){
+    let s=0;
+    for(const d in entries){ if(!isDate(d)||d.slice(0,7)!==ym) continue; const f=entries[d]&&entries[d].fin; if(f&&f[kind]) s+=finSum(f[kind]); }
+    return s;
+  }
+
+  function finRow(label,amtText,cls,kind,idx){
+    return '<div class="fin-row"><span class="fin-lab">'+esc(label)+'</span>'
+         +'<span class="fin-amt '+cls+'">'+amtText+'</span>'
+         +'<span class="x" data-k="'+kind+'" data-i="'+idx+'" aria-label="삭제">✕</span></div>';
+  }
+
+  function renderFinance(){
+    const ym=current.slice(0,7);
+    entries[current]=entries[current]||{};
+    entries[current].fin=curFin;                    // keep cache in sync for live calc
+    const todayNet=finSum(curFin.inc)-finSum(curFin.exp);
+    const bal=balanceThrough(current);
+    const carry=bal-todayNet;
+    const alloc=+allocs[ym]||0;
+    const exec=monthSum(ym,"buy");
+    const wait=alloc-exec;
+    const sav=monthSum(ym,"sav");
+
+    gid("finBalance").textContent=won(bal);
+    gid("finCarry").textContent="전일 이월 "+num(carry);
+    gid("finInvest").innerHTML=num(exec)+'<span class="sub"> / '+num(alloc)+'</span>';
+    gid("finWait").textContent="대기금 "+num(wait);
+    gid("finSave").textContent=won(sav);
+
+    let life='<div class="fin-row"><span class="fin-lab fin-carry">전일 이월</span><span class="fin-amt fin-carry">'+won(carry)+'</span></div>';
+    curFin.inc.forEach((e,i)=>{ life+=finRow(e.label||(e.sell?"매도 입금":"수입"),"＋"+won(e.amount),"pos","inc",i); });
+    curFin.exp.forEach((e,i)=>{ life+=finRow(e.label||"지출","－"+won(e.amount),"neg","exp",i); });
+    life+='<div class="fin-row"><span class="fin-lab fin-total">오늘 잔액 → 내일 이월</span><span class="fin-amt fin-total">'+won(bal)+'</span></div>';
+    gid("finLifeList").innerHTML=life;
+
+    const pct=alloc>0?Math.max(0,Math.min(100,exec/alloc*100)):0;
+    gid("finBarFill").style.width=pct+"%";
+    gid("finExec").textContent="집행 "+num(exec)+(alloc>0?" ("+Math.round(pct)+"%)":"");
+    gid("finWait2").textContent="대기 "+num(wait);
+    let inv="";
+    curFin.buy.forEach((e,i)=>{ inv+=finRow("매수 · "+(e.label||""),"집행 ＋"+won(e.amount),"inv","buy",i); });
+    if(!curFin.buy.length) inv='<div class="fin-empty">오늘 매수 내역이 없어요.</div>';
+    gid("finInvList").innerHTML=inv;
+    if(document.activeElement!==gid("allocInput")) gid("allocInput").value=alloc?num(alloc):"";
+
+    let sv="";
+    curFin.sav.forEach((e,i)=>{ sv+=finRow(e.label||"적금","＋"+won(e.amount),"acc","sav",i); });
+    if(!curFin.sav.length) sv='<div class="fin-empty">오늘 적금 내역이 없어요.</div>';
+    gid("finSavList").innerHTML=sv;
+    gid("savTag").textContent="이번 달 "+won(sav);
+  }
+
+  function finChanged(){
+    entries[current]=entries[current]||{}; entries[current].fin=curFin;
+    renderFinance(); queueSave();
+    if(currentView==="review") renderReview();
+  }
+  function addFin(kind,label,amtStr){
+    const amount=parseAmt(amtStr); if(!amount) return;
+    if(kind==="sell") curFin.inc.push({label:"매도 · "+(label||"매도"),amount,sell:true});
+    else curFin[kind].push({label:label||"",amount});
+    finChanged();
+  }
+  function persistAllocs(){ store.set("alloc",JSON.stringify(allocs)); if(fb) fb.child("_alloc").set(allocs); }
+
+  function wireAdd(btnId,labelId,amtId,kindId){
+    const add=()=>{ const kind=kindId?gid(kindId).value:"sav"; addFin(kind,gid(labelId).value.trim(),gid(amtId).value); gid(labelId).value=""; gid(amtId).value=""; gid(labelId).focus(); };
+    gid(btnId).onclick=add;
+    gid(amtId).addEventListener("keydown",e=>{ if(e.key==="Enter") add(); });
+    gid(labelId).addEventListener("keydown",e=>{ if(e.key==="Enter") gid(amtId).focus(); });
+  }
+  wireAdd("lifeAdd","lifeLabel","lifeAmt","lifeKind");
+  wireAdd("invAdd","invLabel","invAmt","invKind");
+  wireAdd("savAdd","savLabel","savAmt",null);
+
+  ["finLifeList","finInvList","finSavList"].forEach(id=>{
+    gid(id).addEventListener("click",e=>{
+      const x=e.target.closest(".x"); if(!x) return;
+      const k=x.dataset.k, i=+x.dataset.i;
+      if(curFin[k]) curFin[k].splice(i,1);
+      finChanged();
+    });
+  });
+
+  gid("allocInput").addEventListener("input",()=>{
+    const ym=current.slice(0,7); const v=parseAmt(gid("allocInput").value);
+    if(v) allocs[ym]=v; else delete allocs[ym];
+    persistAllocs(); renderFinance();
+  });
+  gid("allocInput").addEventListener("blur",renderFinance);
+
   /* ===================== INIT ===================== */
   async function loadAllLocal(){
     entries={};
     const keys=await store.list("log:");
     for(const k of keys){ const v=await store.get(k); if(v){ try{ entries[k.slice(4)]=JSON.parse(v); }catch(e){} } }
+    const a=await store.get("alloc"); if(a){ try{ allocs=JSON.parse(a)||{}; }catch(e){} }
   }
   (async function init(){
     // open today's record when launched from a push notification
