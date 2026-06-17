@@ -369,7 +369,7 @@
           </div>
 
           <div class="fin-blk">
-            <div class="fin-bh">생활비 · 수입/지출</div>
+            <div class="fin-bh">수입/지출</div>
             <div id="finLifeList"></div>
             <div class="fin-add">
               <input type="text" class="fin-i-label" id="lifeLabel" placeholder="내용 (예: 점심, 월급)" />
@@ -914,9 +914,6 @@
     let life='<div class="fin-row"><span class="fin-lab fin-carry">전일 이월</span><span class="fin-amt fin-carry">'+won(carry)+'</span></div>';
     curFin.inc.forEach((e,i)=>{ life+=finRow(e.label||(e.sell?"매도 입금":"수입"),"＋"+won(e.amount),"pos","inc",i); });
     curFin.exp.forEach((e,i)=>{ life+=finRow(e.label||"지출","－"+won(e.amount),"neg","exp",i); });
-    life+='<div class="fin-row"><span class="fin-lab">오늘 잔액 → 내일 이월</span><span class="fin-amt">'+won(bal)+'</span></div>';
-    life+='<div class="fin-row"><span class="fin-lab fin-carry">－ 적금·투자대기금</span><span class="fin-amt fin-carry" id="finCarveAmt">0원</span></div>';
-    life+='<div class="fin-row"><span class="fin-lab fin-total">＝ 지금 쓸 수 있는 돈</span><span class="fin-amt fin-total" id="finSpendAmt">0원</span></div>';
     gid("finLifeList").innerHTML=life;
 
     // 투자 — 계좌별 행 (집행은 실제 매수액, 대기는 0 바닥)
