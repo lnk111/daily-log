@@ -146,6 +146,8 @@
   .fin-row .x{cursor:pointer; color:var(--faint); font-size:13px; line-height:1; padding:3px 6px; border-radius:6px; flex:none;}
   .fin-row .x:hover{background:var(--accent-soft); color:var(--prob);}
   .fin-bar{height:10px; border-radius:6px; background:var(--accent-soft); overflow:hidden; margin:10px 0 6px;}
+  .fin-profit{font-size:12.5px; font-weight:700; margin:2px 0 6px;}
+  .fin-profit.pos{color:var(--keep);} .fin-profit.neg{color:var(--prob);} .fin-profit.zero{color:var(--faint);}
   .fin-bar-fill{height:100%; background:var(--try); width:0%; transition:width .25s ease;}
   .fin-bar-cap{display:flex; justify-content:space-between; font-size:12px; color:var(--sub); margin-bottom:6px;}
   .fin-bar-cap .e{color:var(--try); font-weight:600;}
@@ -381,6 +383,7 @@
             <div class="fin-bh">투자
               <span class="fin-alloc">이번 달 배정 합계 <b id="invAllocTotal">0</b> 원</span>
             </div>
+            <div class="fin-profit zero" id="invProfit">투자수익 : 0원</div>
             <div class="fin-bar"><div class="fin-bar-fill" id="finBarFill"></div></div>
             <div class="fin-bar-cap"><span class="e" id="finExec">집행 0</span><span id="finWait2">대기 0</span></div>
             <div id="finAcctList" class="acct-box"></div>
@@ -396,7 +399,7 @@
               <input type="text" id="acctNew" placeholder="계좌 추가 (예: 토스증권)" />
               <button class="fin-i-btn ghost" id="acctAdd">＋ 계좌</button>
             </div>
-            <div class="fin-note">매수·납입은 해당 계좌 투자금에서 집행돼요 · 매도·인출은 수입(생활비)으로 들어가요</div>
+            <div class="fin-note">매수·납입은 해당 계좌 집행으로 잡혀요 · 매도·인출은 같은 종목 매수액과의 차액(손익)이 투자수익→대기금에 반영돼요. <b>손익 계산은 "계좌 + 종목명"이 정확히 같아야</b> 돼요.</div>
           </div>
 
           <div class="fin-blk">
@@ -837,10 +840,10 @@
 
   /* ===================== 가계부 (FINANCE) ===================== */
   function gid(id){ return document.getElementById(id); }
-  function emptyFin(){ return {inc:[],exp:[],buy:[],sav:[]}; }
-  function cloneFin(f){ return f ? {inc:(f.inc||[]).slice(),exp:(f.exp||[]).slice(),buy:(f.buy||[]).slice(),sav:(f.sav||[]).slice()} : emptyFin(); }
+  function emptyFin(){ return {inc:[],exp:[],buy:[],sell:[],sav:[]}; }
+  function cloneFin(f){ return f ? {inc:(f.inc||[]).slice(),exp:(f.exp||[]).slice(),buy:(f.buy||[]).slice(),sell:(f.sell||[]).slice(),sav:(f.sav||[]).slice()} : emptyFin(); }
   function finSum(arr){ let s=0; if(arr) for(const e of arr) s+=(+e.amount||0); return s; }
-  function finHasContent(f){ return !!(f && (finSum(f.inc)||finSum(f.exp)||finSum(f.buy)||finSum(f.sav))); }
+  function finHasContent(f){ return !!(f && (finSum(f.inc)||finSum(f.exp)||finSum(f.buy)||finSum(f.sell)||finSum(f.sav))); }
   function won(n){ return Math.round(n||0).toLocaleString("ko-KR")+"원"; }
   function num(n){ return Math.round(n||0).toLocaleString("ko-KR"); }
   function parseAmt(s){ return Math.round(Math.abs(parseFloat(String(s).replace(/[^0-9.]/g,""))||0)); }
@@ -870,6 +873,29 @@
   function allocTotal(ym){ const m=allocs[ym]; let s=0; if(m&&typeof m==="object") for(const k in m) s+=(+m[k]||0); return s; }
   function cumKind(dateStr,kind){ let s=0; for(const d in entries){ if(!isDate(d)||d>dateStr) continue; const f=entries[d]&&entries[d].fin; if(f&&f[kind]) s+=finSum(f[kind]); } return s; }
 
+  // 종목(계좌+이름) 정확 매칭으로 이번 달 매도 손익 = Σ(매도합 − 매수합), 매도가 있는 종목만
+  function profitMonth(ym){
+    const b={}, s={};
+    for(const d in entries){ if(!isDate(d)||d.slice(0,7)!==ym) continue; const f=entries[d]&&entries[d].fin; if(!f) continue;
+      if(f.buy) for(const e of f.buy){ const k=(e.acct||"")+"│"+(e.label||""); b[k]=(b[k]||0)+(+e.amount||0); }
+      if(f.sell) for(const e of f.sell){ const k=(e.acct||"")+"│"+(e.label||""); s[k]=(s[k]||0)+(+e.amount||0); }
+    }
+    let p=0; for(const k in s) p+=s[k]-(b[k]||0);
+    return p;
+  }
+  function computeInvest(ym){
+    let totAlloc=0, totExecCap=0, totWaitBudget=0; const per=[];
+    acctList.forEach(acct=>{
+      const a=getAlloc(ym,acct), buy=monthSumAcct(ym,"buy",acct);
+      const wait=Math.max(0, a-buy);                 // 대기는 0 밑으로 안 내려감
+      totAlloc+=a; totExecCap+=Math.min(buy,a); totWaitBudget+=wait;
+      per.push({acct,a,buy,wait});
+    });
+    const profit=profitMonth(ym);
+    const investWait=Math.max(0, totWaitBudget+profit);  // 투자대기금 = 미집행 + 손익 (0 바닥)
+    return {totAlloc,totExecCap,investWait,profit,per};
+  }
+
   function finRow(label,amtText,cls,kind,idx){
     return '<div class="fin-row"><span class="fin-lab">'+esc(label)+'</span>'
          +'<span class="fin-amt '+cls+'">'+amtText+'</span>'
@@ -883,24 +909,17 @@
     const todayNet=finSum(curFin.inc)-finSum(curFin.exp);
     const bal=balanceThrough(current);
     const carry=bal-todayNet;
-    const sav=monthSum(ym,"sav");
-    const wait=Math.max(0, allocTotal(ym)-monthSum(ym,"buy"));
-    const carve=cumKind(current,"sav")+cumKind(current,"buy")+wait;  // 적금 누적 + 매수 누적 + 이번 달 대기금
-    const spend=bal-carve;
 
-    gid("finBalance").textContent=won(spend);
-    gid("finCarry").textContent="수입−지출 "+num(bal)+" 중";
-    gid("finSave").textContent=won(sav);
-
+    // 생활비 ledger (숫자는 refreshNumbers가 채움)
     let life='<div class="fin-row"><span class="fin-lab fin-carry">전일 이월</span><span class="fin-amt fin-carry">'+won(carry)+'</span></div>';
     curFin.inc.forEach((e,i)=>{ life+=finRow(e.label||(e.sell?"매도 입금":"수입"),"＋"+won(e.amount),"pos","inc",i); });
     curFin.exp.forEach((e,i)=>{ life+=finRow(e.label||"지출","－"+won(e.amount),"neg","exp",i); });
     life+='<div class="fin-row"><span class="fin-lab">오늘 잔액 → 내일 이월</span><span class="fin-amt">'+won(bal)+'</span></div>';
-    life+='<div class="fin-row"><span class="fin-lab fin-carry">－ 적금·투자로 묶인 돈</span><span class="fin-amt fin-carry">'+won(carve)+'</span></div>';
-    life+='<div class="fin-row"><span class="fin-lab fin-total">＝ 지금 쓸 수 있는 돈</span><span class="fin-amt fin-total">'+won(spend)+'</span></div>';
+    life+='<div class="fin-row"><span class="fin-lab fin-carry">－ 적금·투자대기금</span><span class="fin-amt fin-carry" id="finCarveAmt">0원</span></div>';
+    life+='<div class="fin-row"><span class="fin-lab fin-total">＝ 지금 쓸 수 있는 돈</span><span class="fin-amt fin-total" id="finSpendAmt">0원</span></div>';
     gid("finLifeList").innerHTML=life;
 
-    // 투자 — 계좌별 행
+    // 투자 — 계좌별 행 (집행은 실제 매수액, 대기는 0 바닥)
     let rows="";
     acctList.forEach((acct,i)=>{
       const a=getAlloc(ym,acct);
@@ -919,34 +938,46 @@
 
     let inv="";
     curFin.buy.forEach((e,i)=>{ inv+=finRow("매수 · "+(e.acct?e.acct+" · ":"")+(e.label||""),"집행 ＋"+won(e.amount),"inv","buy",i); });
-    if(!curFin.buy.length) inv='<div class="fin-empty">오늘 매수·납입 내역이 없어요.</div>';
+    curFin.sell.forEach((e,i)=>{ inv+=finRow("매도 · "+(e.acct?e.acct+" · ":"")+(e.label||""),"매도 ＋"+won(e.amount),"pos","sell",i); });
+    if(!curFin.buy.length && !curFin.sell.length) inv='<div class="fin-empty">오늘 매수·매도 내역이 없어요.</div>';
     gid("finInvList").innerHTML=inv;
 
     let sv="";
     curFin.sav.forEach((e,i)=>{ sv+=finRow(e.label||"적금","＋"+won(e.amount),"acc","sav",i); });
     if(!curFin.sav.length) sv='<div class="fin-empty">오늘 적금 내역이 없어요.</div>';
     gid("finSavList").innerHTML=sv;
-    gid("savTag").textContent="이번 달 "+won(sav);
 
-    updateInvestTotals();
+    refreshNumbers();
   }
 
-  function updateInvestTotals(){
+  // 행을 다시 그리지 않고 숫자만 갱신 (배정 입력 중에도 안전)
+  function refreshNumbers(){
     const ym=current.slice(0,7);
-    let totAlloc=0, totExec=0;
-    acctList.forEach((acct,i)=>{
-      const a=getAlloc(ym,acct), ex=monthSumAcct(ym,"buy",acct);
-      totAlloc+=a; totExec+=ex;
-      const mid=gid("acctMid"+i);
-      if(mid) mid.textContent="집행 "+num(ex)+" · 대기 "+num(a-ex);
-    });
-    const pct=totAlloc>0?Math.max(0,Math.min(100,totExec/totAlloc*100)):0;
+    const I=computeInvest(ym);
+    const bal=balanceThrough(current);
+    const sav=monthSum(ym,"sav");
+    const carve=cumKind(current,"sav")+I.investWait;   // 적금(누적) + 투자대기금
+    const spend=bal-carve;
+
+    gid("finBalance").textContent=won(spend);
+    gid("finCarry").textContent="수입−지출 "+num(bal)+" 중";
+    gid("finSave").textContent=won(sav);
+    if(gid("finCarveAmt")) gid("finCarveAmt").textContent=won(carve);
+    if(gid("finSpendAmt")) gid("finSpendAmt").textContent=won(spend);
+
+    gid("finInvest").innerHTML=num(I.totExecCap)+'<span class="sub"> / '+num(I.totAlloc)+'</span>';
+    gid("finWait").textContent="대기금 "+num(I.investWait);
+    gid("invAllocTotal").textContent=num(I.totAlloc);
+    const pl=gid("invProfit");
+    if(pl){ pl.textContent="투자수익 : "+(I.profit>=0?"＋":"－")+num(Math.abs(I.profit))+"원";
+      pl.className="fin-profit "+(I.profit>0?"pos":I.profit<0?"neg":"zero"); }
+    const pct=I.totAlloc>0?Math.max(0,Math.min(100,I.totExecCap/I.totAlloc*100)):0;
     gid("finBarFill").style.width=pct+"%";
-    gid("finExec").textContent="집행 "+num(totExec)+(totAlloc>0?" ("+Math.round(pct)+"%)":"");
-    gid("finWait2").textContent="대기 "+num(totAlloc-totExec);
-    gid("finInvest").innerHTML=num(totExec)+'<span class="sub"> / '+num(totAlloc)+'</span>';
-    gid("finWait").textContent="대기금 "+num(totAlloc-totExec);
-    gid("invAllocTotal").textContent=num(totAlloc);
+    gid("finExec").textContent="집행 "+num(I.totExecCap)+(I.totAlloc>0?" ("+Math.round(pct)+"%)":"");
+    gid("finWait2").textContent="대기 "+num(I.investWait);
+    gid("finSave").textContent=won(sav);
+    gid("savTag").textContent="이번 달 "+won(sav);
+    I.per.forEach((p,i)=>{ const m=gid("acctMid"+i); if(m) m.textContent="집행 "+num(p.buy)+" · 대기 "+num(p.wait); });
   }
 
   function finChanged(){
@@ -956,7 +987,7 @@
   }
   function addFin(kind,label,amtStr,acct){
     const amount=parseAmt(amtStr); if(!amount) return;
-    if(kind==="sell") curFin.inc.push({label:"매도 · "+(acct?acct+" · ":"")+(label||"매도"),amount,sell:true});
+    if(kind==="sell") curFin.sell.push({label:label||"",amount,acct:acct||""});
     else if(kind==="buy") curFin.buy.push({label:label||"",amount,acct:acct||""});
     else curFin[kind].push({label:label||"",amount});
     finChanged();
@@ -995,7 +1026,7 @@
     if(!allocs[ym]||typeof allocs[ym]!=="object") allocs[ym]={};
     const v=parseAmt(inp.value);
     if(v) allocs[ym][acct]=v; else delete allocs[ym][acct];
-    updateInvestTotals();
+    refreshNumbers();
     clearTimeout(allocTimer); allocTimer=setTimeout(persistAllocs,600);
   });
   gid("finAcctList").addEventListener("blur",e=>{
