@@ -953,7 +953,7 @@
     const I=computeInvest(ym);
     const bal=balanceThrough(current);
     const sav=monthSum(ym,"sav");
-    const carve=cumKind(current,"sav")+I.investWait;   // 적금(누적) + 투자대기금
+    const carve=cumKind(current,"sav")+I.totAlloc;   // 적금(누적) + 투자 배정 합계
     const spend=bal-carve;
 
     gid("finBalance").textContent=won(spend);
