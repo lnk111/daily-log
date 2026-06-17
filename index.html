@@ -994,6 +994,7 @@
 
   function wireAdd(btnId,labelId,amtId,kindId){
     const add=()=>{ const kind=kindId?gid(kindId).value:"sav"; addFin(kind,gid(labelId).value.trim(),gid(amtId).value); gid(labelId).value=""; gid(amtId).value=""; gid(labelId).focus(); };
+    gid(btnId).addEventListener("mousedown",e=>e.preventDefault());   // 버튼이 포커스를 안 뺏게 → 한글 입력 유지
     gid(btnId).onclick=add;
     gid(amtId).addEventListener("keydown",e=>{ if(e.key==="Enter") add(); });
     gid(labelId).addEventListener("keydown",e=>{ if(e.key==="Enter") gid(amtId).focus(); });
@@ -1002,6 +1003,7 @@
   wireAdd("savAdd","savLabel","savAmt",null);
 
   function invAddFn(){ addFin(gid("invKind").value, gid("invLabel").value.trim(), gid("invAmt").value, gid("invAcct").value); gid("invLabel").value=""; gid("invAmt").value=""; gid("invLabel").focus(); }
+  gid("invAdd").addEventListener("mousedown",e=>e.preventDefault());
   gid("invAdd").onclick=invAddFn;
   gid("invAmt").addEventListener("keydown",e=>{ if(e.key==="Enter") invAddFn(); });
   gid("invLabel").addEventListener("keydown",e=>{ if(e.key==="Enter") gid("invAmt").focus(); });
