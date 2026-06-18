@@ -514,6 +514,7 @@
     document.getElementById("headDate").textContent=d.getFullYear()+". "+pad(d.getMonth()+1)+". "+pad(d.getDate())+" ("+WD[d.getDay()]+")";
   }
   function grow(t){t.style.height="auto";const min=t.classList.contains("kpt-line")?24:120;t.style.height=Math.max(t.scrollHeight,min)+"px";}
+  function growAll(){ FIELDS.forEach(f=>{ if(els[f]) grow(els[f]); }); }
 
   function loadDayFromCache(){
     loading=true;
@@ -598,6 +599,7 @@
     currentView=v;
     document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.view===v));
     document.querySelectorAll(".view").forEach(s=>s.classList.toggle("active", s.id==="view-"+v));
+    if(v==="record") requestAnimationFrame(growAll);   // 탭으로 돌아오면 숨김 상태에서 접힌 칸을 다시 펼침
     if(v==="calendar") renderCalendar();
     if(v==="review") renderReview();
     checkDue();
@@ -1068,7 +1070,12 @@
     await loadRem();
     await loadPush();
     await loadSync();   // if previously connected, Firebase snapshot overrides cache
+    requestAnimationFrame(growAll);
+    setTimeout(growAll,300);                 // 폰트·동기화 반영 후 한 번 더 펼침
   })();
+
+  window.addEventListener("resize",()=>{ if(currentView==="record") growAll(); });
+  window.addEventListener("load",growAll);
 
 })();
 </script>
