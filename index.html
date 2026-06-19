@@ -50,6 +50,10 @@
   .bell,.gear{position:relative;}
   .bell .dot,.gear .dot{position:absolute; top:7px; right:7px; width:7px; height:7px; border-radius:999px; background:var(--accent); display:none;}
   .bell.on .dot{display:block;} .gear.on .dot{display:block; background:var(--keep);}
+  .avatar{width:32px; height:32px; border-radius:999px; background:var(--accent); color:#fff;
+    font-weight:700; font-size:13px; display:none; place-items:center; overflow:hidden;
+    background-size:cover; background-position:center; margin-left:2px;}
+  .avatar.on{display:grid;} .avatar:hover{background:var(--accent); filter:brightness(.92);}
 
   /* segmented tabs */
   .tabs{max-width:var(--maxw); margin:0 auto; padding:0 20px 12px; display:flex; gap:6px;}
@@ -264,6 +268,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
       <button class="icon-btn gear" id="gear" aria-label="기기 동기화"><span class="dot"></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><polyline points="8 16 12 12 16 16"/><line x1="12" y1="12" x2="12" y2="21"/></svg></button>
+      <button class="icon-btn avatar" id="avatar" aria-label="내 계정 (누르면 로그아웃)"><span id="avatarInner"></span></button>
     </div>
 
     <div class="tabs" role="tablist">
@@ -305,12 +310,7 @@
           <button class="btn ghost" id="logoutBtn" style="display:none;">로그아웃</button>
         </div>
         <div class="sync-status off" id="syncStatus">로그인 안 됨 · 이 기기에만 저장돼요</div>
-        <div class="note">
-          처음 한 번만 준비하면 돼요: ① Firebase 콘솔 → <b>Authentication</b> → 로그인 방법에서 <b>Google</b> 사용 설정 →
-          ② Authentication → Settings → <b>승인된 도메인</b>에 <code>lnk111.github.io</code> 추가 →
-          ③ <b>Realtime Database 규칙</b>을 아래로 교체. 그다음 위 "구글로 로그인"을 누르면 기존 기록이 자동으로 옮겨져요(원본은 그대로 보존).<br>
-          규칙: <code>{ "rules": { "logs": { "$uid": { ".read": "auth!=null&amp;&amp;auth.uid==$uid", ".write": "auth!=null&amp;&amp;auth.uid==$uid" }, "lnk111": { ".read": "auth!=null", ".write": "auth!=null" } } } }</code>
-        </div>
+        <div class="note">어느 기기에서든 같은 구글 계정으로 로그인하면 기록이 그대로 이어져요. 각자 자기 기록만 보이고 서로 섞이지 않아요.</div>
       </div>
     </div>
 
@@ -796,7 +796,6 @@
     messagingSenderId:"148402603863",
     appId:"1:148402603863:web:b18d88d97f18b9e9c5e012"
   };
-  const LEGACY_CODE="lnk111";   // 기존 동기화 코드(데이터 이전용)
   const syncStatus=document.getElementById("syncStatus"), gear=document.getElementById("gear");
   document.getElementById("gear").onclick=()=>{ document.getElementById("remPanel").classList.remove("open"); document.getElementById("syncPanel").classList.toggle("open"); };
   function setSyncStatus(text,cls){ syncStatus.textContent=text; syncStatus.className="sync-status "+cls; gear.classList.toggle("on",cls==="ok"); }
@@ -817,19 +816,6 @@
     },err=>{ setSyncStatus("동기화 오류: "+err.code+" · DB 규칙을 확인하세요","err"); });
   }
 
-  // 첫 로그인 시 기존 기록(logs/lnk111)을 내 계정(logs/uid)으로 1회 복사 (원본 보존)
-  async function migrateIfNeeded(db,uid){
-    try{
-      const mine=await db.ref("logs/"+uid).once("value");
-      if(mine.exists()) return;                       // 이미 내 데이터 있음 → 이전 불필요
-      const legacy=await db.ref("logs/"+LEGACY_CODE).once("value");
-      if(legacy.exists()){
-        setSyncStatus("기존 기록을 옮기는 중…","ok");
-        await db.ref("logs/"+uid).set(legacy.val());  // 복사 (lnk111 원본은 그대로 둠)
-      }
-    }catch(e){ /* 규칙 등으로 실패해도 로그인/동기화는 계속 */ }
-  }
-
   let fbReady=false;
   function initFirebase(){
     if(fbReady) return true;
@@ -838,20 +824,36 @@
     fbReady=true; return true;
   }
 
+  function setAvatar(user){
+    const av=document.getElementById("avatar"), inner=document.getElementById("avatarInner");
+    if(user){
+      if(user.photoURL){ av.style.backgroundImage="url('"+user.photoURL+"')"; inner.textContent=""; }
+      else { av.style.backgroundImage="none"; inner.textContent=((user.email||user.displayName||"·")[0]||"·").toUpperCase(); }
+      av.title=(user.email||user.displayName||"내 계정")+" · 누르면 로그아웃";
+      av.classList.add("on");
+    } else { av.classList.remove("on"); av.style.backgroundImage="none"; inner.textContent=""; }
+  }
+
   async function onLogin(user){
     const db=firebase.database();
-    await migrateIfNeeded(db,user.uid);
     attachListener(db.ref("logs/"+user.uid));
     document.getElementById("loginBtn").style.display="none";
     document.getElementById("logoutBtn").style.display="";
     setSyncStatus("로그인됨: "+(user.email||user.displayName||"내 계정")+" · 실시간 동기화 중","ok");
+    setAvatar(user);
   }
   function onLogout(){
     if(fb){ try{fb.off();}catch(e){} fb=null; }
     document.getElementById("loginBtn").style.display="";
     document.getElementById("logoutBtn").style.display="none";
     setSyncStatus("로그인 안 됨 · 이 기기에만 저장돼요","off");
+    setAvatar(null);
   }
+  // 프로필 동그라미를 누르면 동기화 패널을 열어 로그아웃 버튼을 보여줌
+  document.getElementById("avatar").onclick=()=>{
+    document.getElementById("remPanel").classList.remove("open");
+    document.getElementById("syncPanel").classList.add("open");
+  };
 
   document.getElementById("loginBtn").onclick=async()=>{
     if(!initFirebase()) return;
