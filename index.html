@@ -147,6 +147,7 @@
   .fin-lab{flex:1; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .fin-amt{font-weight:600; white-space:nowrap;}
   .fin-amt.pos,.fin-lab.pos{color:var(--keep);} .fin-amt.neg{color:var(--prob);} .fin-amt.inv{color:var(--try);} .fin-amt.acc{color:var(--accent);}
+  .fin-amt.buyc{color:#C2566A;} .fin-amt.sellc{color:#4E6FB0;}
   .fin-carry{color:var(--sub);} .fin-total{font-weight:700; color:var(--ink);}
   .fin-row .x{cursor:pointer; color:var(--faint); font-size:13px; line-height:1; padding:3px 6px; border-radius:6px; flex:none;}
   .fin-row .x:hover{background:var(--accent-soft); color:var(--prob);}
@@ -381,13 +382,13 @@
             </div>
             <div class="fin-profit zero" id="invProfit">투자수익 : 0원</div>
             <div class="fin-bar"><div class="fin-bar-fill" id="finBarFill"></div></div>
-            <div class="fin-bar-cap"><span class="e" id="finExec">집행 0</span><span id="finWait2">대기 0</span></div>
+            <div class="fin-bar-cap"><span class="e" id="finExec">매수 0</span><span id="finWait2">대기 0</span></div>
             <div id="finAcctList" class="acct-box"></div>
             <div class="fin-add">
               <select class="fin-i-sel" id="invAcct"></select>
               <input type="text" class="fin-i-label" id="invLabel" placeholder="내용 (예: 삼성전자)" />
               <input type="text" inputmode="numeric" class="fin-i-amt" id="invAmt" placeholder="금액" />
-              <select class="fin-i-sel" id="invKind"><option value="buy">매수·납입</option><option value="sell">매도·인출</option></select>
+              <select class="fin-i-sel" id="invKind"><option value="buy">매수</option><option value="sell">매도</option></select>
               <button class="fin-i-btn" id="invAdd">추가</button>
             </div>
             <div id="finInvList"></div>
@@ -395,7 +396,7 @@
               <input type="text" id="acctNew" placeholder="계좌 추가 (예: 토스증권)" />
               <button class="fin-i-btn ghost" id="acctAdd">＋ 계좌</button>
             </div>
-            <div class="fin-note">매수·납입은 해당 계좌 집행으로 잡혀요 · 매도·인출은 같은 종목 매수액과의 차액(손익)이 투자수익→대기금에 반영돼요. <b>손익 계산은 "계좌 + 종목명"이 정확히 같아야</b> 돼요.</div>
+            <div class="fin-note">매수는 그 계좌의 매수 합계로 쌓여요 · 매도는 같은 종목 매수액과의 차액(손익)이 투자수익→대기금에 반영돼요. <b>손익 계산은 "계좌 + 종목명"이 정확히 같아야</b> 돼요.</div>
           </div>
 
           <div class="fin-blk">
@@ -674,7 +675,7 @@
     const span=revMode==="week"?7:(r.end.getDate());
     document.getElementById("revStat").innerHTML="이 기간 <b>"+days+"</b>일 기록 · 총 "+span+"일 중";
     document.getElementById("revFinCards").innerHTML=
-      revFinCard("수입",fInc)+revFinCard("지출",fExp)+revFinCard("투자 집행",fBuy)+revFinCard("적금",fSav);
+      revFinCard("수입",fInc)+revFinCard("지출",fExp)+revFinCard("투자 매수",fBuy)+revFinCard("적금",fSav);
     fill("revKeep",buckets.keep); fill("revProblem",buckets.problem); fill("revTry",buckets.try);
   }
   function revFinCard(label,val){
@@ -988,8 +989,8 @@
     if(acctList.indexOf(prev)>=0) gid("invAcct").value=prev;
 
     let inv="";
-    curFin.buy.forEach((e,i)=>{ inv+=finRow("매수 · "+(e.acct?e.acct+" · ":"")+(e.label||""),"집행 ＋"+won(e.amount),"inv","buy",i); });
-    curFin.sell.forEach((e,i)=>{ inv+=finRow("매도 · "+(e.acct?e.acct+" · ":"")+(e.label||""),"매도 ＋"+won(e.amount),"pos","sell",i); });
+    curFin.buy.forEach((e,i)=>{ inv+=finRow("매수 · "+(e.acct?e.acct+" · ":"")+(e.label||""),"매수 ＋"+won(e.amount),"buyc","buy",i); });
+    curFin.sell.forEach((e,i)=>{ inv+=finRow("매도 · "+(e.acct?e.acct+" · ":"")+(e.label||""),"매도 ＋"+won(e.amount),"sellc","sell",i); });
     if(!curFin.buy.length && !curFin.sell.length) inv='<div class="fin-empty">오늘 매수·매도 내역이 없어요.</div>';
     gid("finInvList").innerHTML=inv;
 
@@ -1024,11 +1025,11 @@
       pl.className="fin-profit "+(I.profit>0?"pos":I.profit<0?"neg":"zero"); }
     const pct=I.totAlloc>0?Math.max(0,Math.min(100,I.totExecCap/I.totAlloc*100)):0;
     gid("finBarFill").style.width=pct+"%";
-    gid("finExec").textContent="집행 "+num(I.totExecCap)+(I.totAlloc>0?" ("+Math.round(pct)+"%)":"");
+    gid("finExec").textContent="매수 "+num(I.totExecCap)+(I.totAlloc>0?" ("+Math.round(pct)+"%)":"");
     gid("finWait2").textContent="대기 "+num(I.investWait);
     gid("finSave").textContent=won(sav);
     gid("savTag").textContent="이번 달 "+won(sav);
-    I.per.forEach((p,i)=>{ const m=gid("acctMid"+i); if(m) m.textContent="집행 "+num(p.buy)+" · 대기 "+num(p.wait); });
+    I.per.forEach((p,i)=>{ const m=gid("acctMid"+i); if(m) m.textContent="매수 "+num(p.buy)+" · 대기 "+num(p.wait); });
   }
 
   function finChanged(){
@@ -1093,7 +1094,7 @@
   gid("finAcctList").addEventListener("click",e=>{
     const x=e.target.closest(".acct-x"); if(!x) return;
     const acct=acctList[+x.dataset.i]; if(!acct) return;
-    if(!confirm('"'+acct+'" 계좌를 목록에서 뺄까요?\n(이미 기록한 거래·집행은 그대로 남아요)')) return;
+    if(!confirm('"'+acct+'" 계좌를 목록에서 뺄까요?\n(이미 기록한 거래는 그대로 남아요)')) return;
     acctList=acctList.filter(a=>a!==acct);
     persistAccts(); renderFinance();
   });
