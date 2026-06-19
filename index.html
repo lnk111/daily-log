@@ -870,9 +870,19 @@
       setSyncStatus("로그인 실패: "+(e.code||e.message),"err");
     }
   };
+  // 이 기기에 저장된 복사본만 비움 (Firebase의 내 기록은 그대로 안전)
+  async function clearLocalCache(){
+    try{ const keys=await store.list("log:"); for(const k of keys){ await store.set(k,""); } }catch(e){}
+    try{ await store.set("alloc",""); await store.set("accts",""); }catch(e){}
+    entries={}; allocs={}; acctList=DEFAULT_ACCTS.slice(); curFin=emptyFin();
+    loadDayFromCache();
+    if(currentView==="calendar") renderCalendar();
+    if(currentView==="review") renderReview();
+  }
   document.getElementById("logoutBtn").onclick=async()=>{
+    if(fb){ try{fb.off();}catch(e){} fb=null; }   // 먼저 동기화 끊어 빈 데이터가 올라가지 않게
     try{ await firebase.auth().signOut(); }catch(e){}
-    await loadAllLocal(); loadDayFromCache();
+    await clearLocalCache();
   };
 
   async function loadSync(){
