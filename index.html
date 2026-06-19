@@ -14,6 +14,7 @@
 <!-- Firebase (compat). Loads when self-hosted; gracefully skipped if blocked. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-auth-compat.js"></script>
 
 <style>
   :root{
@@ -297,23 +298,18 @@
     <!-- sync panel -->
     <div class="panel" id="syncPanel">
       <div class="card">
-        <h3>여러 기기 동기화 (Firebase)</h3>
-        <p>모바일과 PC를 같은 기록으로 묶습니다. Firebase 프로젝트의 웹 config와 나만의 동기화 코드를 입력하면, 어느 기기에서 써도 실시간으로 합쳐져요.</p>
-        <div class="field-row">
-          <label for="syncCode">동기화 코드</label>
-          <input type="text" id="syncCode" placeholder="나만 아는 비밀 코드 (예: namkyung-2026)" autocomplete="off" />
-        </div>
-        <textarea class="cfg" id="syncCfg" placeholder='{ "apiKey": "...", "authDomain": "...", "databaseURL": "https://....firebaseio.com", "projectId": "...", "appId": "..." }'></textarea>
+        <h3>로그인 (여러 기기 동기화)</h3>
+        <p>구글로 로그인하면 노트북·모니터·폰 어디서든 같은 기록이 자동으로 이어져요. 더 이상 코드를 입력할 필요가 없어요.</p>
         <div class="btns">
-          <button class="btn" id="syncConnect">연결</button>
-          <button class="btn ghost" id="syncDisconnect">연결 해제</button>
+          <button class="btn" id="loginBtn">구글로 로그인</button>
+          <button class="btn ghost" id="logoutBtn" style="display:none;">로그아웃</button>
         </div>
-        <div class="sync-status off" id="syncStatus">연결 안 됨 · 이 기기에만 저장돼요</div>
+        <div class="sync-status off" id="syncStatus">로그인 안 됨 · 이 기기에만 저장돼요</div>
         <div class="note">
-          준비: ① <code>console.firebase.google.com</code>에서 프로젝트 생성 → <b>Realtime Database</b> 만들기 →
-          ② 프로젝트 설정의 웹 앱 config 복사(<code>databaseURL</code> 포함)해서 위에 붙여넣기 →
-          ③ 모든 기기에 같은 동기화 코드 입력.<br>
-          보안 규칙(개인용 간단): <code>{ "rules": { "logs": { "$code": { ".read": true, ".write": true } } } }</code> — 코드를 비밀로 유지하세요. 더 엄격하게 하려면 익명 인증 + <code>auth != null</code> 규칙을 권장합니다.
+          처음 한 번만 준비하면 돼요: ① Firebase 콘솔 → <b>Authentication</b> → 로그인 방법에서 <b>Google</b> 사용 설정 →
+          ② Authentication → Settings → <b>승인된 도메인</b>에 <code>lnk111.github.io</code> 추가 →
+          ③ <b>Realtime Database 규칙</b>을 아래로 교체. 그다음 위 "구글로 로그인"을 누르면 기존 기록이 자동으로 옮겨져요(원본은 그대로 보존).<br>
+          규칙: <code>{ "rules": { "logs": { "$uid": { ".read": "auth!=null&amp;&amp;auth.uid==$uid", ".write": "auth!=null&amp;&amp;auth.uid==$uid" }, "lnk111": { ".read": "auth!=null", ".write": "auth!=null" } } } }</code>
         </div>
       </div>
     </div>
@@ -790,55 +786,99 @@
     else { setPush(PUSH_READY?"꺼짐":"설정 필요", "off"); }
   }
 
-  /* ===================== FIREBASE SYNC ===================== */
-  const syncCode=document.getElementById("syncCode"), syncCfg=document.getElementById("syncCfg"),
-        syncStatus=document.getElementById("syncStatus"), gear=document.getElementById("gear");
-  document.getElementById("gear").onclick=()=>{ document.getElementById("remPanel").classList.remove("open"); document.getElementById("syncPanel").classList.toggle("open"); };
-
-  function setSyncStatus(text,cls){ syncStatus.textContent=text; syncStatus.className="sync-status "+cls; gear.classList.toggle("on",cls==="ok"); }
-  function parseConfig(text){
-    text=text.trim(); if(!text) return null;
-    try{ return JSON.parse(text); }catch(e){}
-    try{ return (new Function("return ("+text.replace(/^[^{]*?({)/,'$1').replace(/;?\s*$/,'')+")"))(); }catch(e){ return null; }
-  }
-  function connect(cfg,code){
-    if(typeof firebase==="undefined"){ setSyncStatus("이 환경에선 Firebase를 불러올 수 없어요. 다운로드해 호스팅하면 동작합니다.","err"); return false; }
-    try{
-      if(!firebase.apps.length) firebase.initializeApp(cfg); 
-      const db=firebase.database();
-      if(fb){ try{fb.off();}catch(e){} }
-      fb=db.ref("logs/"+code);
-      fb.on("value",snap=>{
-        const val=snap.val()||{};
-        allocs=val._alloc||{}; delete val._alloc;
-        if(val._accts){ acctList=val._accts; } delete val._accts;
-        store.set("alloc",JSON.stringify(allocs)); store.set("accts",JSON.stringify(acctList));
-        entries=val;
-        if(currentView==="record") syncDayIntoDOM();
-        if(currentView==="calendar") renderCalendar();
-        if(currentView==="review") renderReview();
-        checkDue();
-      },err=>{ setSyncStatus("연결 오류: "+err.code+" · 규칙/URL을 확인하세요","err"); });
-      setSyncStatus("연결됨 · 모든 기기와 실시간 동기화 중","ok");
-      return true;
-    }catch(e){ setSyncStatus("설정 오류: config를 확인하세요","err"); return false; }
-  }
-  document.getElementById("syncConnect").onclick=async()=>{
-    const code=syncCode.value.trim(); const cfg=parseConfig(syncCfg.value);
-    if(!code){ setSyncStatus("동기화 코드를 입력하세요","err"); return; }
-    if(!cfg){ setSyncStatus("Firebase config 형식을 확인하세요","err"); return; }
-    if(connect(cfg,code)){ await store.set("settings:sync",JSON.stringify({code,cfg})); }
+  /* ===================== FIREBASE LOGIN + SYNC ===================== */
+  const FB_CONFIG={
+    apiKey:"AIzaSyAJiSnaGl7Tr3d4uAYcSbvkOIe40IbmnMw",
+    authDomain:"daily-log-6cd4c.firebaseapp.com",
+    databaseURL:"https://daily-log-6cd4c-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:"daily-log-6cd4c",
+    storageBucket:"daily-log-6cd4c.firebasestorage.app",
+    messagingSenderId:"148402603863",
+    appId:"1:148402603863:web:b18d88d97f18b9e9c5e012"
   };
-  document.getElementById("syncDisconnect").onclick=async()=>{
-    if(fb){try{fb.off();}catch(e){}} fb=null;
-    await store.set("settings:sync","");
-    setSyncStatus("연결 해제됨 · 이 기기에만 저장돼요","off");
+  const LEGACY_CODE="lnk111";   // 기존 동기화 코드(데이터 이전용)
+  const syncStatus=document.getElementById("syncStatus"), gear=document.getElementById("gear");
+  document.getElementById("gear").onclick=()=>{ document.getElementById("remPanel").classList.remove("open"); document.getElementById("syncPanel").classList.toggle("open"); };
+  function setSyncStatus(text,cls){ syncStatus.textContent=text; syncStatus.className="sync-status "+cls; gear.classList.toggle("on",cls==="ok"); }
+
+  function attachListener(ref){
+    if(fb){ try{fb.off();}catch(e){} }
+    fb=ref;
+    fb.on("value",snap=>{
+      const val=snap.val()||{};
+      allocs=val._alloc||{}; delete val._alloc;
+      if(val._accts){ acctList=val._accts; } delete val._accts;
+      store.set("alloc",JSON.stringify(allocs)); store.set("accts",JSON.stringify(acctList));
+      entries=val;
+      if(currentView==="record") syncDayIntoDOM();
+      if(currentView==="calendar") renderCalendar();
+      if(currentView==="review") renderReview();
+      checkDue();
+    },err=>{ setSyncStatus("동기화 오류: "+err.code+" · DB 규칙을 확인하세요","err"); });
+  }
+
+  // 첫 로그인 시 기존 기록(logs/lnk111)을 내 계정(logs/uid)으로 1회 복사 (원본 보존)
+  async function migrateIfNeeded(db,uid){
+    try{
+      const mine=await db.ref("logs/"+uid).once("value");
+      if(mine.exists()) return;                       // 이미 내 데이터 있음 → 이전 불필요
+      const legacy=await db.ref("logs/"+LEGACY_CODE).once("value");
+      if(legacy.exists()){
+        setSyncStatus("기존 기록을 옮기는 중…","ok");
+        await db.ref("logs/"+uid).set(legacy.val());  // 복사 (lnk111 원본은 그대로 둠)
+      }
+    }catch(e){ /* 규칙 등으로 실패해도 로그인/동기화는 계속 */ }
+  }
+
+  let fbReady=false;
+  function initFirebase(){
+    if(fbReady) return true;
+    if(typeof firebase==="undefined"){ setSyncStatus("이 환경에선 Firebase를 못 불러와요. 호스팅 페이지에서 동작합니다.","err"); return false; }
+    if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+    fbReady=true; return true;
+  }
+
+  async function onLogin(user){
+    const db=firebase.database();
+    await migrateIfNeeded(db,user.uid);
+    attachListener(db.ref("logs/"+user.uid));
+    document.getElementById("loginBtn").style.display="none";
+    document.getElementById("logoutBtn").style.display="";
+    setSyncStatus("로그인됨: "+(user.email||user.displayName||"내 계정")+" · 실시간 동기화 중","ok");
+  }
+  function onLogout(){
+    if(fb){ try{fb.off();}catch(e){} fb=null; }
+    document.getElementById("loginBtn").style.display="";
+    document.getElementById("logoutBtn").style.display="none";
+    setSyncStatus("로그인 안 됨 · 이 기기에만 저장돼요","off");
+  }
+
+  document.getElementById("loginBtn").onclick=async()=>{
+    if(!initFirebase()) return;
+    const provider=new firebase.auth.GoogleAuthProvider();
+    setSyncStatus("로그인 창을 여는 중…","ok");
+    try{
+      await firebase.auth().signInWithPopup(provider);
+    }catch(e){
+      if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment"||e.code==="auth/cancelled-popup-request")){
+        try{ await firebase.auth().signInWithRedirect(provider); return; }
+        catch(e2){ setSyncStatus("로그인 실패: "+(e2.code||e2.message),"err"); return; }
+      }
+      if(e&&e.code==="auth/unauthorized-domain"){ setSyncStatus("승인된 도메인에 lnk111.github.io를 추가하세요","err"); return; }
+      setSyncStatus("로그인 실패: "+(e.code||e.message),"err");
+    }
+  };
+  document.getElementById("logoutBtn").onclick=async()=>{
+    try{ await firebase.auth().signOut(); }catch(e){}
     await loadAllLocal(); loadDayFromCache();
   };
+
   async function loadSync(){
-    const raw=await store.get("settings:sync");
-    if(raw){ try{ const s=JSON.parse(raw); if(s&&s.code&&s.cfg){ syncCode.value=s.code; syncCfg.value=JSON.stringify(s.cfg,null,2); connect(s.cfg,s.code); } }catch(e){} }
+    if(!initFirebase()) return;
+    try{ await firebase.auth().getRedirectResult(); }catch(e){}   // 모바일 리다이렉트 로그인 결과 처리
+    firebase.auth().onAuthStateChanged(user=>{ if(user) onLogin(user); else onLogout(); });
   }
+
 
   /* ===================== 가계부 (FINANCE) ===================== */
   function gid(id){ return document.getElementById(id); }
