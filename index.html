@@ -849,6 +849,8 @@
     document.getElementById("logoutBtn").style.display="none";
     setSyncStatus("로그인 안 됨 · 이 기기에만 저장돼요","off");
     setAvatar(null);
+    clearLocalDisplay();   // 로그아웃 상태가 되면 화면(생활비·투자·적금·배정)을 즉시 비움
+    clearLocalStore();     // 이 기기에 남은 복사본도 비움 (Firebase의 내 기록은 그대로)
   }
   // 프로필 동그라미를 누르면 동기화 패널을 열어 로그아웃 버튼을 보여줌
   document.getElementById("avatar").onclick=()=>{
@@ -871,19 +873,20 @@
       setSyncStatus("로그인 실패: "+(e.code||e.message),"err");
     }
   };
-  // 이 기기에 저장된 복사본만 비움 (Firebase의 내 기록은 그대로 안전)
-  async function clearLocalCache(){
-    try{ const keys=await store.list("log:"); for(const k of keys){ await store.set(k,""); } }catch(e){}
-    try{ await store.set("alloc",""); await store.set("accts",""); }catch(e){}
+  // 화면을 즉시 빈 상태로 (생활비·투자·적금·배정 모두 0/빈칸)
+  function clearLocalDisplay(){
     entries={}; allocs={}; acctList=DEFAULT_ACCTS.slice(); curFin=emptyFin();
     loadDayFromCache();
     if(currentView==="calendar") renderCalendar();
     if(currentView==="review") renderReview();
   }
+  // 이 기기에 저장된 복사본 비움 (Firebase의 내 기록은 그대로 안전)
+  async function clearLocalStore(){
+    try{ const keys=await store.list("log:"); for(const k of keys){ await store.set(k,""); } }catch(e){}
+    try{ await store.set("alloc",""); await store.set("accts",""); }catch(e){}
+  }
   document.getElementById("logoutBtn").onclick=async()=>{
-    if(fb){ try{fb.off();}catch(e){} fb=null; }   // 먼저 동기화 끊어 빈 데이터가 올라가지 않게
-    try{ await firebase.auth().signOut(); }catch(e){}
-    await clearLocalCache();
+    try{ await firebase.auth().signOut(); }catch(e){}   // 로그아웃 → onLogout이 화면·저장본을 비움
   };
 
   async function loadSync(){
