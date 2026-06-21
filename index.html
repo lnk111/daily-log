@@ -148,6 +148,44 @@
   .fin-amt{font-weight:600; white-space:nowrap;}
   .fin-amt.pos,.fin-lab.pos{color:var(--keep);} .fin-amt.neg{color:var(--prob);} .fin-amt.inv{color:var(--try);} .fin-amt.acc{color:var(--accent);}
   .fin-amt.buyc{color:#C2566A;} .fin-amt.sellc{color:#4E6FB0;}
+  /* ---- Toss-style 가계부 ---- */
+  .fin-hero{padding:8px 2px 6px;}
+  .hero-label{font-size:13px; color:var(--sub);}
+  .hero-num{font-size:34px; font-weight:800; letter-spacing:-0.6px; color:var(--ink); line-height:1.12; margin-top:5px;}
+  .hero-sub{font-size:12px; color:var(--faint); margin-top:6px;}
+  .hero-stats{display:flex; gap:26px; margin-top:18px;}
+  .hstat{display:flex; flex-direction:column;}
+  .hstat .hl{font-size:12px; color:var(--faint);}
+  .hstat .hv{font-size:16px; font-weight:700; color:var(--ink); margin-top:3px;}
+  .hstat .hv .sub{font-size:12px; color:var(--faint); font-weight:500;}
+  .fin-sec{margin-top:22px;}
+  .fin-sec-h{font-size:12px; color:var(--faint); margin-bottom:2px;}
+  .inv-summary{width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; background:transparent; border:0; padding:6px 0; cursor:pointer; text-align:left; font-family:inherit;}
+  .is-l{display:flex; flex-direction:column;}
+  .is-title{font-size:16px; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:8px;}
+  .is-sub{font-size:12px; color:var(--sub); margin-top:3px;}
+  .chev{font-style:normal; color:var(--faint); font-size:13px; transition:transform .2s ease;}
+  .chev.up{transform:rotate(180deg);}
+  .inv-detail{margin-top:10px;}
+  .fin-fab{position:sticky; bottom:14px; width:100%; margin-top:24px; border:0; border-radius:999px; background:var(--ink); color:#fff; font-family:inherit; font-size:15px; font-weight:700; padding:15px; cursor:pointer;}
+  .fin-fab i{font-style:normal; margin-right:2px;}
+  .fin-fab:active{transform:scale(.99);}
+  .sheet-backdrop{position:fixed; inset:0; background:rgba(20,18,15,.42); z-index:60;}
+  .sheet{position:fixed; left:0; right:0; bottom:0; z-index:61; background:var(--paper); border-radius:22px 22px 0 0; padding:10px 18px 22px; max-width:560px; margin:0 auto; transform:translateY(100%); transition:transform .24s ease; box-shadow:0 -10px 34px rgba(0,0,0,.13);}
+  .sheet.up{transform:translateY(0);}
+  .sheet-grab{width:40px; height:4px; border-radius:999px; background:var(--rule); margin:6px auto 14px;}
+  .sheet-title{font-size:16px; font-weight:700; margin-bottom:14px;}
+  .sheet-close{position:absolute; top:14px; right:16px; border:0; background:transparent; font-size:16px; color:var(--faint); cursor:pointer;}
+  .seg{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
+  .seg button{font-family:inherit; font-size:13px; border:0; border-radius:999px; padding:8px 15px; background:var(--accent-soft); color:var(--sub); cursor:pointer;}
+  .seg button.on{background:var(--ink); color:#fff; font-weight:700;}
+  .sheet-row{display:flex; align-items:center; justify-content:space-between; padding:6px 0 10px;}
+  .sheet-row span{font-size:13px; color:var(--sub);}
+  .sheet-row select{font-family:inherit; font-size:14px; border:1px solid var(--rule); border-radius:10px; padding:8px 11px; background:var(--bg); color:var(--ink); outline:none;}
+  .sheet-input{width:100%; box-sizing:border-box; font-family:inherit; font-size:15px; border:1px solid var(--rule); border-radius:12px; padding:13px; margin-top:8px; background:var(--bg); color:var(--ink); outline:none;}
+  .sheet-input:focus{border-color:var(--accent);}
+  .sheet-add{width:100%; margin-top:14px; border:0; border-radius:13px; background:var(--ink); color:#fff; font-family:inherit; font-size:15px; font-weight:700; padding:15px; cursor:pointer;}
+  .sheet-add:active{transform:scale(.99);}
   .fin-carry{color:var(--sub);} .fin-total{font-weight:700; color:var(--ink);}
   .fin-row .x{cursor:pointer; color:var(--faint); font-size:13px; line-height:1; padding:3px 6px; border-radius:6px; flex:none;}
   .fin-row .x:hover{background:var(--accent-soft); color:var(--prob);}
@@ -359,57 +397,60 @@
 
         <section class="section fin-head">
           <h2>가계부 <span class="en">매월 1일 투자·적금 0원 초기화</span></h2>
-          <div class="fin-cards">
-            <div class="fin-card"><div class="fl">쓸 수 있는 생활비 (오늘)</div><div class="fv" id="finBalance">0원</div><div class="fh" id="finCarry">수입−지출 0 중</div></div>
-            <div class="fin-card"><div class="fl">투자 (이번 달)</div><div class="fv" id="finInvest">0</div><div class="fh" id="finWait">대기금 0</div></div>
-            <div class="fin-card"><div class="fl">적금 (이번 달)</div><div class="fv" id="finSave">0원</div><div class="fh">이번 달 누적</div></div>
-          </div>
-
-          <div class="fin-blk">
-            <div class="fin-bh">수입/지출</div>
-            <div id="finLifeList"></div>
-            <div class="fin-add">
-              <input type="text" class="fin-i-label" id="lifeLabel" placeholder="내용 (예: 점심, 월급)" />
-              <input type="text" inputmode="numeric" class="fin-i-amt" id="lifeAmt" placeholder="금액" />
-              <select class="fin-i-sel" id="lifeKind"><option value="inc">수입</option><option value="exp">지출</option></select>
-              <button class="fin-i-btn" id="lifeAdd">추가</button>
+          <div class="fin-hero">
+            <div class="hero-label">오늘 쓸 수 있는 돈</div>
+            <div class="hero-num" id="finBalance">0원</div>
+            <div class="hero-sub" id="finCarry">적금·투자 배정 빼고 남은 돈</div>
+            <div class="hero-stats">
+              <div class="hstat"><span class="hl">투자</span><span class="hv" id="finInvest">0</span></div>
+              <div class="hstat"><span class="hl">적금</span><span class="hv" id="finSave">0원</span></div>
             </div>
           </div>
 
-          <div class="fin-blk">
-            <div class="fin-bh">투자
-              <span class="fin-alloc">이번 달 배정 합계 <b id="invAllocTotal">0</b> 원</span>
-            </div>
-            <div class="fin-profit zero" id="invProfit">투자수익 : 0원</div>
+          <div class="fin-sec">
+            <div class="fin-sec-h">오늘 내역</div>
+            <div id="finTodayList"></div>
+          </div>
+
+          <div class="fin-sec">
+            <button class="inv-summary" id="invToggle" aria-expanded="false">
+              <span class="is-l">
+                <span class="is-title">투자 <span class="fin-profit zero" id="invProfit">＋0원</span></span>
+                <span class="is-sub"><span id="finExec">매수 0</span> · 배정 <span id="invAllocTotal">0</span> · <span id="finWait2">대기 0</span></span>
+              </span>
+              <i class="chev" id="invChev">▾</i>
+            </button>
             <div class="fin-bar"><div class="fin-bar-fill" id="finBarFill"></div></div>
-            <div class="fin-bar-cap"><span class="e" id="finExec">매수 0</span><span id="finWait2">대기 0</span></div>
-            <div id="finAcctList" class="acct-box"></div>
-            <div class="fin-add">
-              <select class="fin-i-sel" id="invAcct"></select>
-              <input type="text" class="fin-i-label" id="invLabel" placeholder="내용 (예: 삼성전자)" />
-              <input type="text" inputmode="numeric" class="fin-i-amt" id="invAmt" placeholder="금액" />
-              <select class="fin-i-sel" id="invKind"><option value="buy">매수</option><option value="sell">매도</option></select>
-              <button class="fin-i-btn" id="invAdd">추가</button>
-            </div>
-            <div id="finInvList"></div>
-            <div class="fin-acct-edit">
-              <input type="text" id="acctNew" placeholder="계좌 추가 (예: 토스증권)" />
-              <button class="fin-i-btn ghost" id="acctAdd">＋ 계좌</button>
-            </div>
-            <div class="fin-note">매수는 그 계좌의 매수 합계로 쌓여요 · 매도는 같은 종목 매수액과의 차액(손익)이 투자수익→대기금에 반영돼요. <b>손익 계산은 "계좌 + 종목명"이 정확히 같아야</b> 돼요.</div>
-          </div>
-
-          <div class="fin-blk">
-            <div class="fin-bh">적금 <span class="fin-alloc" id="savTag">이번 달 0원</span></div>
-            <div id="finSavList"></div>
-            <div class="fin-add">
-              <input type="text" class="fin-i-label" id="savLabel" placeholder="내용 (예: 정기적금)" />
-              <input type="text" inputmode="numeric" class="fin-i-amt" id="savAmt" placeholder="금액" />
-              <button class="fin-i-btn" id="savAdd">추가</button>
+            <div class="inv-detail" id="invDetail" hidden>
+              <div id="finAcctList" class="acct-box"></div>
+              <div class="fin-acct-edit">
+                <input type="text" id="acctNew" placeholder="계좌 추가 (예: 토스증권)" />
+                <button class="fin-i-btn ghost" id="acctAdd">＋ 계좌</button>
+              </div>
+              <div class="fin-note">매수는 그 계좌의 매수 합계로 쌓여요 · 매도는 같은 종목 매수액과의 차액(손익)이 투자수익→대기금에 반영돼요. <b>손익 계산은 "계좌 + 종목명"이 정확히 같아야</b> 돼요.</div>
             </div>
           </div>
 
-          <div class="fin-note">주간·월간 회고에 수입·지출·투자·적금 합계가 모여서 보여요.</div>
+          <button class="fin-fab" id="addOpen"><i>＋</i> 기록하기</button>
+          <div class="fin-note" style="text-align:center;">주간·월간 회고에 합계가 모여서 보여요.</div>
+
+          <div class="sheet-backdrop" id="sheetBack" hidden></div>
+          <div class="sheet" id="addSheet" hidden>
+            <button class="sheet-close" id="sheetClose" aria-label="닫기">✕</button>
+            <div class="sheet-grab"></div>
+            <div class="sheet-title">기록하기</div>
+            <div class="seg" id="addSeg">
+              <button data-kind="exp">지출</button>
+              <button data-kind="inc">수입</button>
+              <button data-kind="buy">매수</button>
+              <button data-kind="sell">매도</button>
+              <button data-kind="sav">적금</button>
+            </div>
+            <div class="sheet-row" id="sheetAcctRow" hidden><span>계좌</span><select id="sheetAcct"></select></div>
+            <input type="text" id="sheetLabel" class="sheet-input" placeholder="내용" />
+            <input type="text" inputmode="numeric" id="sheetAmt" class="sheet-input" placeholder="금액" />
+            <button class="sheet-add" id="sheetAdd">추가</button>
+          </div>
         </section>
       </div>
     </section>
@@ -964,15 +1005,15 @@
     const ym=current.slice(0,7);
     entries[current]=entries[current]||{};
     entries[current].fin=curFin;                    // keep cache in sync for live calc
-    const todayNet=finSum(curFin.inc)-finSum(curFin.exp);
-    const bal=balanceThrough(current);
-    const carry=bal-todayNet;
 
-    // 생활비 ledger (숫자는 refreshNumbers가 채움)
-    let life='<div class="fin-row"><span class="fin-lab fin-carry">전일 이월</span><span class="fin-amt fin-carry">'+won(carry)+'</span></div>';
-    curFin.inc.forEach((e,i)=>{ life+=finRow(e.label||(e.sell?"매도 입금":"수입"),"＋"+won(e.amount),"pos","inc",i); });
-    curFin.exp.forEach((e,i)=>{ life+=finRow(e.label||"지출","－"+won(e.amount),"neg","exp",i); });
-    gid("finLifeList").innerHTML=life;
+    // 오늘 내역 (수입·지출·매수·매도·적금 합본)
+    let L="";
+    curFin.inc.forEach((e,i)=>{ L+=finRow(e.label||"수입","＋"+won(e.amount),"pos","inc",i); });
+    curFin.exp.forEach((e,i)=>{ L+=finRow(e.label||"지출","－"+won(e.amount),"neg","exp",i); });
+    curFin.buy.forEach((e,i)=>{ L+=finRow("매수 · "+(e.acct?e.acct+" · ":"")+(e.label||""),"＋"+won(e.amount),"buyc","buy",i); });
+    curFin.sell.forEach((e,i)=>{ L+=finRow("매도 · "+(e.acct?e.acct+" · ":"")+(e.label||""),"＋"+won(e.amount),"sellc","sell",i); });
+    curFin.sav.forEach((e,i)=>{ L+=finRow("적금"+(e.label?" · "+e.label:""),"＋"+won(e.amount),"acc","sav",i); });
+    gid("finTodayList").innerHTML=L||'<div class="fin-empty">오늘 내역이 없어요. 아래 ＋기록하기로 추가하세요.</div>';
 
     // 투자 — 계좌별 행 (집행은 실제 매수액, 대기는 0 바닥)
     let rows="";
@@ -987,20 +1028,10 @@
     });
     gid("finAcctList").innerHTML=rows||'<div class="fin-empty">계좌를 추가해 주세요.</div>';
 
-    const prev=gid("invAcct").value;
-    gid("invAcct").innerHTML=acctList.map(a=>'<option>'+esc(a)+'</option>').join("");
-    if(acctList.indexOf(prev)>=0) gid("invAcct").value=prev;
-
-    let inv="";
-    curFin.buy.forEach((e,i)=>{ inv+=finRow("매수 · "+(e.acct?e.acct+" · ":"")+(e.label||""),"매수 ＋"+won(e.amount),"buyc","buy",i); });
-    curFin.sell.forEach((e,i)=>{ inv+=finRow("매도 · "+(e.acct?e.acct+" · ":"")+(e.label||""),"매도 ＋"+won(e.amount),"sellc","sell",i); });
-    if(!curFin.buy.length && !curFin.sell.length) inv='<div class="fin-empty">오늘 매수·매도 내역이 없어요.</div>';
-    gid("finInvList").innerHTML=inv;
-
-    let sv="";
-    curFin.sav.forEach((e,i)=>{ sv+=finRow(e.label||"적금","＋"+won(e.amount),"acc","sav",i); });
-    if(!curFin.sav.length) sv='<div class="fin-empty">오늘 적금 내역이 없어요.</div>';
-    gid("finSavList").innerHTML=sv;
+    // 기록 시트의 계좌 선택지
+    const prev=gid("sheetAcct").value;
+    gid("sheetAcct").innerHTML=acctList.map(a=>'<option>'+esc(a)+'</option>').join("");
+    if(acctList.indexOf(prev)>=0) gid("sheetAcct").value=prev;
 
     refreshNumbers();
   }
@@ -1021,17 +1052,16 @@
     if(gid("finSpendAmt")) gid("finSpendAmt").textContent=won(spend);
 
     gid("finInvest").innerHTML=num(I.totExecCap)+'<span class="sub"> / '+num(I.totAlloc)+'</span>';
-    gid("finWait").textContent="대기금 "+num(I.investWait);
+    const fw=gid("finWait"); if(fw) fw.textContent="대기금 "+num(I.investWait);
     gid("invAllocTotal").textContent=num(I.totAlloc);
     const pl=gid("invProfit");
-    if(pl){ pl.textContent="투자수익 : "+(I.profit>=0?"＋":"－")+num(Math.abs(I.profit))+"원";
+    if(pl){ pl.textContent="수익 "+(I.profit>=0?"＋":"－")+num(Math.abs(I.profit))+"원";
       pl.className="fin-profit "+(I.profit>0?"pos":I.profit<0?"neg":"zero"); }
     const pct=I.totAlloc>0?Math.max(0,Math.min(100,I.totExecCap/I.totAlloc*100)):0;
     gid("finBarFill").style.width=pct+"%";
     gid("finExec").textContent="매수 "+num(I.totExecCap)+(I.totAlloc>0?" ("+Math.round(pct)+"%)":"");
     gid("finWait2").textContent="대기 "+num(I.investWait);
-    gid("finSave").textContent=won(sav);
-    gid("savTag").textContent="이번 달 "+won(sav);
+    const st=gid("savTag"); if(st) st.textContent="이번 달 "+won(sav);
     I.per.forEach((p,i)=>{ const m=gid("acctMid"+i); if(m) m.textContent="매수 "+num(p.buy)+" · 대기 "+num(p.wait); });
   }
 
@@ -1050,30 +1080,53 @@
   function persistAllocs(){ store.set("alloc",JSON.stringify(allocs)); if(fb) fb.child("_alloc").set(allocs); }
   function persistAccts(){ store.set("accts",JSON.stringify(acctList)); if(fb) fb.child("_accts").set(acctList); }
 
-  function wireAdd(btnId,labelId,amtId,kindId){
-    const add=()=>{ const kind=kindId?gid(kindId).value:"sav"; addFin(kind,gid(labelId).value.trim(),gid(amtId).value); gid(labelId).value=""; gid(amtId).value=""; gid(labelId).focus(); };
-    gid(btnId).addEventListener("mousedown",e=>e.preventDefault());   // 버튼이 포커스를 안 뺏게 → 한글 입력 유지
-    gid(btnId).onclick=add;
-    gid(amtId).addEventListener("keydown",e=>{ if(e.key==="Enter") add(); });
-    gid(labelId).addEventListener("keydown",e=>{ if(e.key==="Enter") gid(amtId).focus(); });
-  }
-  wireAdd("lifeAdd","lifeLabel","lifeAmt","lifeKind");
-  wireAdd("savAdd","savLabel","savAmt",null);
-
-  function invAddFn(){ addFin(gid("invKind").value, gid("invLabel").value.trim(), gid("invAmt").value, gid("invAcct").value); gid("invLabel").value=""; gid("invAmt").value=""; gid("invLabel").focus(); }
-  gid("invAdd").addEventListener("mousedown",e=>e.preventDefault());
-  gid("invAdd").onclick=invAddFn;
-  gid("invAmt").addEventListener("keydown",e=>{ if(e.key==="Enter") invAddFn(); });
-  gid("invLabel").addEventListener("keydown",e=>{ if(e.key==="Enter") gid("invAmt").focus(); });
-
-  ["finLifeList","finInvList","finSavList"].forEach(id=>{
-    gid(id).addEventListener("click",e=>{
-      const x=e.target.closest(".x"); if(!x) return;
-      const k=x.dataset.k, i=+x.dataset.i;
-      if(curFin[k]) curFin[k].splice(i,1);
-      finChanged();
-    });
+  // 오늘 내역 삭제
+  gid("finTodayList").addEventListener("click",e=>{
+    const x=e.target.closest(".x"); if(!x) return;
+    const k=x.dataset.k, i=+x.dataset.i;
+    if(curFin[k]) curFin[k].splice(i,1);
+    finChanged();
   });
+
+  // 투자 자세히 펼치기/접기
+  gid("invToggle").onclick=()=>{
+    const d=gid("invDetail"); const open=d.hidden;
+    d.hidden=!open; gid("invToggle").setAttribute("aria-expanded",open?"true":"false");
+    gid("invChev").classList.toggle("up",open);
+  };
+
+  // 기록하기 바텀시트
+  const SHEET_PH={inc:"내용 (예: 월급)",exp:"내용 (예: 점심)",buy:"종목 (예: 삼성전자)",sell:"종목 (예: 삼성전자)",sav:"내용 (예: 정기적금)"};
+  let sheetKind="exp";
+  function setSheetKind(k){
+    sheetKind=k;
+    document.querySelectorAll("#addSeg button").forEach(b=>b.classList.toggle("on",b.dataset.kind===k));
+    gid("sheetAcctRow").hidden=!(k==="buy"||k==="sell");
+    gid("sheetLabel").placeholder=SHEET_PH[k]||"내용";
+  }
+  function openSheet(){
+    gid("sheetBack").hidden=false; gid("addSheet").hidden=false;
+    requestAnimationFrame(()=>gid("addSheet").classList.add("up"));
+    setTimeout(()=>gid("sheetLabel").focus(),140);
+  }
+  function closeSheet(){
+    gid("addSheet").classList.remove("up"); gid("sheetBack").hidden=true;
+    setTimeout(()=>{ gid("addSheet").hidden=true; },220);
+  }
+  gid("addOpen").onclick=openSheet;
+  gid("sheetBack").onclick=closeSheet;
+  gid("sheetClose").onclick=closeSheet;
+  document.getElementById("addSeg").addEventListener("click",e=>{ const b=e.target.closest("button[data-kind]"); if(b) setSheetKind(b.dataset.kind); });
+  function sheetAddFn(){
+    const acct=(sheetKind==="buy"||sheetKind==="sell")?gid("sheetAcct").value:"";
+    addFin(sheetKind, gid("sheetLabel").value.trim(), gid("sheetAmt").value, acct);
+    gid("sheetLabel").value=""; gid("sheetAmt").value=""; gid("sheetLabel").focus();
+  }
+  gid("sheetAdd").addEventListener("mousedown",e=>e.preventDefault());   // 버튼이 포커스를 안 뺏게 → 한글 유지
+  gid("sheetAdd").onclick=sheetAddFn;
+  gid("sheetAmt").addEventListener("keydown",e=>{ if(e.key==="Enter") sheetAddFn(); });
+  gid("sheetLabel").addEventListener("keydown",e=>{ if(e.key==="Enter") gid("sheetAmt").focus(); });
+  setSheetKind("exp");
 
   // 계좌별 배정 입력 (타이핑 중엔 행을 다시 그리지 않고 숫자만 갱신, 저장은 디바운스)
   let allocTimer=null;
