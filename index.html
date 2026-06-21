@@ -176,9 +176,10 @@
   .sheet-grab{width:40px; height:4px; border-radius:999px; background:var(--rule); margin:6px auto 14px;}
   .sheet-title{font-size:16px; font-weight:700; margin-bottom:14px;}
   .sheet-close{position:absolute; top:14px; right:16px; border:0; background:transparent; font-size:16px; color:var(--faint); cursor:pointer;}
-  .seg{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
-  .seg button{font-family:inherit; font-size:13px; border:0; border-radius:999px; padding:8px 15px; background:var(--accent-soft); color:var(--sub); cursor:pointer;}
-  .seg button.on{background:var(--ink); color:#fff; font-weight:700;}
+  .seg{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  .seg-grp{display:flex; gap:3px; background:var(--accent-soft); border-radius:999px; padding:4px;}
+  .seg-grp button{font-family:inherit; font-size:13px; border:0; border-radius:999px; padding:7px 14px; background:transparent; color:var(--sub); cursor:pointer;}
+  .seg-grp button.on{background:var(--ink); color:#fff; font-weight:700;}
   .sheet-row{display:flex; align-items:center; justify-content:space-between; padding:6px 0 10px;}
   .sheet-row span{font-size:13px; color:var(--sub);}
   .sheet-row select{font-family:inherit; font-size:14px; border:1px solid var(--rule); border-radius:10px; padding:8px 11px; background:var(--bg); color:var(--ink); outline:none;}
@@ -440,11 +441,17 @@
             <div class="sheet-grab"></div>
             <div class="sheet-title">기록하기</div>
             <div class="seg" id="addSeg">
-              <button data-kind="exp">지출</button>
-              <button data-kind="inc">수입</button>
-              <button data-kind="buy">매수</button>
-              <button data-kind="sell">매도</button>
-              <button data-kind="sav">적금</button>
+              <div class="seg-grp">
+                <button data-kind="exp">지출</button>
+                <button data-kind="inc">수입</button>
+              </div>
+              <div class="seg-grp">
+                <button data-kind="buy">매수</button>
+                <button data-kind="sell">매도</button>
+              </div>
+              <div class="seg-grp">
+                <button data-kind="sav">적금</button>
+              </div>
             </div>
             <div class="sheet-row" id="sheetAcctRow" hidden><span>계좌</span><select id="sheetAcct"></select></div>
             <input type="text" id="sheetLabel" class="sheet-input" placeholder="내용" />
