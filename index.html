@@ -188,6 +188,13 @@
   .sheet-input:focus{border-color:var(--accent);}
   .sheet-add{width:100%; margin-top:14px; border:0; border-radius:13px; background:var(--ink); color:#fff; font-family:inherit; font-size:15px; font-weight:700; padding:15px; cursor:pointer;}
   .sheet-add:active{transform:scale(.99);}
+  .acct-empty{padding:14px 14px 16px; background:var(--accent-soft); border-radius:14px; margin:2px 0 4px;}
+  .ae-title{font-size:14px; font-weight:700; color:var(--ink);}
+  .ae-desc{font-size:12.5px; color:var(--sub); line-height:1.55; margin-top:6px;}
+  .ae-steps{margin-top:12px; display:flex; flex-direction:column; gap:8px;}
+  .ae-step{display:flex; align-items:flex-start; gap:9px; font-size:13px; color:var(--ink);}
+  .ae-n{flex:none; width:20px; height:20px; border-radius:999px; background:var(--accent); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px;}
+  .ae-ex{font-size:12px; color:var(--faint); margin-top:12px; padding-top:10px; border-top:1px solid var(--rule);}
   .fin-carry{color:var(--sub);} .fin-total{font-weight:700; color:var(--ink);}
   .fin-row .x{cursor:pointer; color:var(--faint); font-size:13px; line-height:1; padding:3px 6px; border-radius:6px; flex:none;}
   .fin-row .x:hover{background:var(--accent-soft); color:var(--prob);}
@@ -856,9 +863,14 @@
     fb.on("value",snap=>{
       const val=snap.val()||{};
       allocs=val._alloc||{}; delete val._alloc;
-      if(val._accts){ acctList=val._accts; } delete val._accts;
-      store.set("alloc",JSON.stringify(allocs)); store.set("accts",JSON.stringify(acctList));
+      const savedAccts=val._accts; delete val._accts;
       entries=val;
+      if(Array.isArray(savedAccts)&&savedAccts.length){ acctList=savedAccts; }
+      else {
+        acctList=deriveAccts();                         // 저장된 계좌가 없으면 기존 매수·배정 기록에서 복원
+        if(acctList.length && fb) fb.child("_accts").set(acctList);   // 복원한 계좌를 한 번 저장
+      }
+      store.set("alloc",JSON.stringify(allocs)); store.set("accts",JSON.stringify(acctList));
       if(currentView==="record") syncDayIntoDOM();
       if(currentView==="calendar") renderCalendar();
       if(currentView==="review") renderReview();
@@ -924,7 +936,7 @@
   };
   // 화면을 즉시 빈 상태로 (생활비·투자·적금·배정 모두 0/빈칸)
   function clearLocalDisplay(){
-    entries={}; allocs={}; acctList=DEFAULT_ACCTS.slice(); curFin=emptyFin();
+    entries={}; allocs={}; acctList=[]; curFin=emptyFin();
     loadDayFromCache();
     if(currentView==="calendar") renderCalendar();
     if(currentView==="review") renderReview();
@@ -958,7 +970,15 @@
   const isDate=(d)=>/^\d{4}-\d{2}-\d{2}$/.test(d);
 
   const DEFAULT_ACCTS=["키움증권","한국투자 ISA","한국투자 연금저축","CMA"];
-  let acctList=DEFAULT_ACCTS.slice();
+  let acctList=[];   // 기본값은 비움 — 로그인해서 데이터/저장된 계좌가 있을 때만 채워짐
+  function deriveAccts(){
+    const set=new Set();
+    for(const d in entries){ const f=entries[d]&&entries[d].fin; if(!f) continue;
+      (f.buy||[]).forEach(e=>{ if(e.acct) set.add(e.acct); });
+      (f.sell||[]).forEach(e=>{ if(e.acct) set.add(e.acct); }); }
+    for(const ym in allocs){ const m=allocs[ym]; if(m&&typeof m==="object") for(const k in m) set.add(k); }
+    return Array.from(set);
+  }
 
   function balanceThrough(dateStr){
     let bal=0;
@@ -1034,7 +1054,18 @@
         +'<span class="acct-x" data-i="'+i+'" aria-label="계좌 삭제">✕</span>'
         +'</div>';
     });
-    gid("finAcctList").innerHTML=rows||'<div class="fin-empty">계좌를 추가해 주세요.</div>';
+    gid("finAcctList").innerHTML=rows||(
+      '<div class="acct-empty">'
+      +'<div class="ae-title">증권·연금 계좌를 추가해 보세요</div>'
+      +'<div class="ae-desc">계좌를 만들면 계좌별로 이번 달 <b>배정(목표)</b>과 실제 <b>매수</b>·<b>대기금</b>을 따로 관리할 수 있어요.</div>'
+      +'<div class="ae-steps">'
+        +'<div class="ae-step"><span class="ae-n">1</span><span>아래 칸에 계좌 이름을 적고 <b>＋계좌</b></span></div>'
+        +'<div class="ae-step"><span class="ae-n">2</span><span>계좌 옆 <b>배정할 금액</b>에 이번 달 목표를 입력</span></div>'
+        +'<div class="ae-step"><span class="ae-n">3</span><span><b>＋기록하기 → 매수</b>로 실제 매수를 기록</span></div>'
+      +'</div>'
+      +'<div class="ae-ex">예시: 키움증권 · 한국투자 ISA · 연금저축 · CMA · 토스증권</div>'
+      +'</div>'
+    );
 
     // 기록 시트의 계좌 선택지
     const prev=gid("sheetAcct").value;
