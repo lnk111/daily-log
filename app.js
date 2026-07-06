@@ -476,6 +476,7 @@
   }
   function getAlloc(ym,acct){ const m=allocs[ym]; return (m&&typeof m==="object")?(+m[acct]||0):0; }
   function allocTotal(ym){ const m=allocs[ym]; let s=0; if(m&&typeof m==="object") for(const k in m) s+=(+m[k]||0); return s; }
+  function allocCumThrough(ym){ let s=0; for(const m in allocs){ if(m<=ym){ const o=allocs[m]; if(o&&typeof o==="object") for(const k in o) s+=(+o[k]||0); } } return s; }
   function cumKind(dateStr,kind){ let s=0; for(const d in entries){ if(!isDate(d)||d>dateStr) continue; const f=entries[d]&&entries[d].fin; if(f&&f[kind]) s+=finSum(f[kind]); } return s; }
 
   // 종목(계좌+이름) 정확 매칭으로 이번 달 매도 손익 = Σ(매도합 − 매수합), 매도가 있는 종목만
@@ -559,8 +560,7 @@
     const I=computeInvest(ym);
     const bal=balanceThrough(current);
     const sav=monthSum(ym,"sav");
-    const thisMonthWait=Math.max(0, I.totAlloc-monthSum(ym,"buy"));   // 이번 달 미집행 배정(월 리셋)
-    const carve=cumKind(current,"sav")+thisMonthWait;                 // 적금(누적) + 미집행 배정 (실제 매수는 생활비와 분리)
+    const carve=cumKind(current,"sav")+allocCumThrough(ym);   // 적금(누적) + 투자 배정 누적(계획금액) · 매수·매도와 무관
     const spend=bal-carve;
 
     gid("finBalance").textContent=won(spend);
