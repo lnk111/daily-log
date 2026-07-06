@@ -529,17 +529,17 @@
       rows+='<div class="acct-row">'
         +'<span class="acct-name">'+esc(acct)+'</span>'
         +'<span class="acct-mid" id="acctMid'+i+'"></span>'
-        +'<input class="acct-alloc" data-i="'+i+'" inputmode="numeric" placeholder="배정할 금액"'+(a?' value="'+num(a)+'"':'')+' />'
+        +'<input class="acct-alloc" data-i="'+i+'" inputmode="numeric" placeholder="계획 금액"'+(a?' value="'+num(a)+'"':'')+' />'
         +'<span class="acct-x" data-i="'+i+'" aria-label="계좌 삭제">✕</span>'
         +'</div>';
     });
     gid("finAcctList").innerHTML=rows||(
       '<div class="acct-empty">'
       +'<div class="ae-title">증권·연금 계좌를 추가해 보세요</div>'
-      +'<div class="ae-desc">계좌를 만들면 계좌별로 이번 달 <b>배정(목표)</b>과 실제 <b>매수</b>·<b>대기금</b>을 따로 관리할 수 있어요.</div>'
+      +'<div class="ae-desc">계좌를 만들면 계좌별로 이번 달 <b>계획</b>과 <b>실제</b> 매수·<b>남음</b>을 따로 관리할 수 있어요.</div>'
       +'<div class="ae-steps">'
         +'<div class="ae-step"><span class="ae-n">1</span><span>아래 칸에 계좌 이름을 적고 <b>＋계좌</b></span></div>'
-        +'<div class="ae-step"><span class="ae-n">2</span><span>계좌 옆 <b>배정할 금액</b>에 이번 달 목표를 입력</span></div>'
+        +'<div class="ae-step"><span class="ae-n">2</span><span>계좌 옆 <b>계획 금액</b>에 이번 달 목표를 입력</span></div>'
         +'<div class="ae-step"><span class="ae-n">3</span><span><b>＋기록하기 → 매수</b>로 실제 매수를 기록</span></div>'
       +'</div>'
       +'<div class="ae-ex">예시: 키움증권 · 한국투자 ISA · 연금저축 · CMA · 토스증권</div>'
@@ -577,10 +577,10 @@
       pl.className="fin-profit "+(I.profit>0?"pos":I.profit<0?"neg":"zero"); }
     const pct=I.totAlloc>0?Math.max(0,Math.min(100,I.totExecCap/I.totAlloc*100)):0;
     gid("finBarFill").style.width=pct+"%";
-    gid("finExec").textContent="매수 "+num(I.totExecCap)+(I.totAlloc>0?" ("+Math.round(pct)+"%)":"");
-    gid("finWait2").textContent="대기 "+num(I.investWait);
+    gid("finExec").textContent="실제 "+num(I.totExecCap)+(I.totAlloc>0?" ("+Math.round(pct)+"%)":"");
+    gid("finWait2").textContent="남음 "+num(I.investWait);
     const st=gid("savTag"); if(st) st.textContent="이번 달 "+won(sav);
-    I.per.forEach((p,i)=>{ const m=gid("acctMid"+i); if(m) m.textContent="매수 "+num(p.buy)+" · 대기 "+num(p.wait); });
+    I.per.forEach((p,i)=>{ const m=gid("acctMid"+i); if(m) m.textContent="실제 "+num(p.buy)+" · 남음 "+num(p.wait); });
   }
 
   function finChanged(){
