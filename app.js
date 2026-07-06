@@ -559,7 +559,9 @@
     const I=computeInvest(ym);
     const bal=balanceThrough(current);
     const sav=monthSum(ym,"sav");
-    const carve=cumKind(current,"sav")+I.totAlloc;   // 적금(누적) + 투자 배정 합계
+    const thisMonthWait=Math.max(0, I.totAlloc-monthSum(ym,"buy"));            // 이번 달 미집행 배정(월 리셋)
+    const netInvested=Math.max(0, cumKind(current,"buy")-cumKind(current,"sell")); // 실제 투자에 묶인 돈(누적 매수−매도)
+    const carve=cumKind(current,"sav")+thisMonthWait+netInvested;              // 적금 + 미집행 배정 + 실투자금
     const spend=bal-carve;
 
     gid("finBalance").textContent=won(spend);
