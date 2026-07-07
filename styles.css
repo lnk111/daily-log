@@ -363,7 +363,11 @@
   #view-record .pad > header.head{ display:none; }
   #view-record .pad > .section{ margin:0; }
   #view-record .pad > .section:not(.kpt-head):not(.fin-head){
-    grid-column:1; padding:18px 26px 2px;
+    grid-column:1; padding:12px 26px 2px;
+  }
+  /* 일지 textarea: 2줄 최소 높이 (내용 적을 때 섹션 간격 줄임) */
+  #view-record .pad > .section:not(.kpt-head):not(.fin-head) .ruled{
+    min-height:calc(var(--row) * 2);
   }
   #view-record .pad > .kpt-head{
     grid-column:2; grid-row:1 / -1; align-self:stretch;
