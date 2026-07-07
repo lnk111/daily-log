@@ -341,6 +341,12 @@
     border-bottom:1px solid var(--rule);
   }
 
+  /* 날짜 알약 박스 제거 */
+  #view-record .datenav .nav{ background:transparent; border:none; padding:0; }
+  #view-record .datenav .date-pill:hover{ background:transparent; }
+  #view-record .datenav .icon-btn:hover{ background:transparent; }
+  #view-record .datenav .today-btn{ background:transparent; border-color:#e4e4e7; }
+
   /* 기록 탭 3컬럼 (일지 | 회고 | 가계부 레일) */
   #view-record .pad{
     display:grid;
