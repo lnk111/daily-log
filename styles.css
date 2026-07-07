@@ -207,6 +207,8 @@
   .acct-alloc:focus{border-color:var(--accent);}
   .acct-x{cursor:pointer; color:var(--faint); font-size:12px; line-height:1; padding:3px 5px; border-radius:6px; flex:none;}
   .acct-x:hover{background:var(--accent-soft); color:var(--prob);}
+  .acct-card-hd{ display:contents; }  /* 모바일: flex 부모에 투명 — name·x가 직접 flex 자식처럼 동작 */
+  .acct-bar{ display:none; }           /* 모바일: 계좌별 진행바 숨김 */
   .fin-acct-edit{display:flex; gap:6px; margin-top:10px;}
   .fin-acct-edit input{flex:1; font-family:inherit; font-size:14px; border:1px solid var(--rule); background:var(--bg); border-radius:9px; padding:8px 10px; color:var(--ink); outline:none;}
   .fin-acct-edit input:focus{border-color:var(--accent);}
@@ -342,8 +344,9 @@
   /* 기록 탭 3컬럼 (일지 | 회고 | 가계부 레일) */
   #view-record .pad{
     display:grid;
-    grid-template-columns: minmax(0,1fr) minmax(0,1fr) 330px;
-    gap:0; padding:0 0 28px; align-items:start;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    grid-template-rows: repeat(3, auto);
+    gap:0; padding:0 0 0; align-items:start;
   }
   #view-record .pad > header.head{ display:none; }
   #view-record .pad > .section{ margin:0; }
@@ -351,12 +354,14 @@
     grid-column:1; padding:18px 26px 2px;
   }
   #view-record .pad > .kpt-head{
-    grid-column:2; grid-row:1 / span 3; align-self:start;
+    grid-column:2; grid-row:1 / -1; align-self:start;
     padding:18px 26px; border-left:1px solid var(--rule);
   }
   #view-record .pad > .fin-head{
-    grid-column:3; grid-row:1 / span 3; align-self:start;
+    grid-column:3; grid-row:1 / -1; align-self:start;
     padding:18px 24px; border-left:1px solid var(--rule);
+    min-height:calc(100vh - 60px);
+    margin-top:-60px; position:relative; z-index:32; background:var(--paper);
   }
 
   /* 컬럼 라벨 (일지 / 회고 / 가계부) */
@@ -380,12 +385,85 @@
   .kpt-head .kpt-item .lab{ font-size:12px; font-weight:700; margin-bottom:5px; }
   .kpt-head .kpt-item .kpt-line{ border-bottom:none; }
 
-  /* 가계부 레일: 기록하기 버튼 정적 배치 */
-  .fin-head .fin-fab{ position:static; margin-top:16px; }
+  /* 가계부 레일: +기록하기 → 우측 하단 플로팅 원형 버튼 */
+  .fin-head .fin-fab{
+    position:fixed; right:28px; bottom:28px; z-index:40;
+    width:auto; height:auto; margin:0;
+    border-radius:999px; padding:14px 22px;
+    background:var(--indigo); color:#fff;
+    box-shadow:0 6px 18px rgba(91,91,214,.35);
+    display:inline-flex; align-items:center; gap:8px;
+    transition:filter .15s, transform .15s;
+  }
+  .fin-head .fin-fab:hover{
+    filter:brightness(.9); transform:translateY(-2px);
+  }
 
-  /* 하단 여백 축소 (사이드바라 하단탭 여백 불필요) */
-  #view-record .pad{ padding-bottom:24px; }
+  /* 하단 여백: 사이드바라 하단탭 여백 불필요 */
+  #view-record .pad{ padding-bottom:0; }
 
   /* 달력·회고: 가운데 단일 컬럼 */
   #view-calendar, #view-review{ max-width:840px; margin:0 auto; }
+
+  /* ── 가계부 레일 다듬기 ── */
+
+  /* 1. 히어로 가운데 정렬 */
+  .fin-head .fin-hero{ text-align:center; }
+  .fin-head .hero-stats{ justify-content:center; }
+
+  /* 2. 오늘 내역 행: 라벨 왼쪽·금액 오른쪽 */
+  #finTodayList .fin-row{
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+  }
+  #finTodayList .fin-lab{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #finTodayList .fin-amt{ flex:none; }
+  #finTodayList .x{ flex:none; }
+
+  /* 3. 투자 요약 → 테두리 카드 (상세는 원본대로 접힘 상태 유지) */
+  #view-record .fin-head .fin-sec:has(.inv-summary){
+    border:1px solid var(--rule); border-radius:12px; padding:12px 14px; margin-top:14px;
+  }
+
+  /* 4. 긴 안내문구 PC에서 숨김 */
+  .fin-head .fin-note{ display:none; }
+
+  /* 5. 계좌 행 구분선 + 여백 */
+  /* 계좌 카드 */
+  #finAcctList .acct-row{
+    display:block; padding:12px 14px; margin-bottom:10px;
+    border:1px solid var(--rule); border-radius:12px;
+  }
+  #finAcctList .acct-row:last-child{ margin-bottom:0; }
+  #finAcctList .acct-card-hd{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;
+  }
+  #finAcctList .acct-card-hd .acct-name{
+    white-space:normal; overflow:visible; text-overflow:clip; flex:1;
+  }
+  #finAcctList .acct-mid{ display:block; margin-bottom:8px; font-size:12px; color:var(--sub); }
+  #finAcctList .acct-bar{
+    display:block; height:4px; background:var(--rule); border-radius:4px;
+    margin-bottom:10px; overflow:hidden;
+  }
+  #finAcctList .acct-bar-fill{
+    height:100%; background:var(--indigo); border-radius:4px; transition:width .3s;
+  }
+  #finAcctList .acct-alloc{ width:100%; box-sizing:border-box; }
+
+  /* ── PC 통합 상단 바 + 사이드바 프로필 ── */
+
+  /* .bar 반투명 제거 → PC에서 solid 배경 (fixed 자식 위치 기준 보정) */
+  .bar{ backdrop-filter:none; -webkit-backdrop-filter:none; background:var(--paper); }
+
+  /* 기록 뷰: datenav를 뷰포트 상단 고정 바로 승격 (bar-row 시각적으로 덮음) */
+  #view-record .datenav{
+    position:fixed; top:0; left:var(--sidebar); right:calc((100vw - var(--sidebar)) / 3); height:60px;
+    z-index:35; background:var(--paper); border-bottom:1px solid var(--rule);
+    padding:0 20px; margin:0;
+    display:flex; align-items:center; justify-content:flex-start; gap:12px;
+  }
+  /* bar 자체 border-bottom 제거 → datenav 선만 남김 */
+  body:has(#view-record.active) .bar{ border-bottom:none; }
+
+
 }

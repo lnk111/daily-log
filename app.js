@@ -368,12 +368,17 @@
 
   function setAvatar(user){
     const av=document.getElementById("avatar"), inner=document.getElementById("avatarInner");
+    const nameEl=document.getElementById("sidebarName");
     if(user){
       if(user.photoURL){ av.style.backgroundImage="url('"+user.photoURL+"')"; inner.textContent=""; }
       else { av.style.backgroundImage="none"; inner.textContent=((user.email||user.displayName||"·")[0]||"·").toUpperCase(); }
       av.title=(user.email||user.displayName||"내 계정")+" · 누르면 로그아웃";
       av.classList.add("on");
-    } else { av.classList.remove("on"); av.style.backgroundImage="none"; inner.textContent=""; }
+      if(nameEl) nameEl.textContent=user.displayName||(user.email||"내 계정").split("@")[0];
+    } else {
+      av.classList.remove("on"); av.style.backgroundImage="none"; inner.textContent="";
+      if(nameEl) nameEl.textContent="";
+    }
   }
 
   async function onLogin(user){
@@ -529,10 +534,10 @@
     acctList.forEach((acct,i)=>{
       const a=getAlloc(ym,acct);
       rows+='<div class="acct-row">'
-        +'<span class="acct-name">'+esc(acct)+'</span>'
+        +'<div class="acct-card-hd"><span class="acct-name">'+esc(acct)+'</span><span class="acct-x" data-i="'+i+'" aria-label="계좌 삭제">✕</span></div>'
         +'<span class="acct-mid" id="acctMid'+i+'"></span>'
+        +'<div class="acct-bar"><div class="acct-bar-fill" id="acctBar'+i+'"></div></div>'
         +'<input class="acct-alloc" data-i="'+i+'" inputmode="numeric" placeholder="계획 금액"'+(a?' value="'+num(a)+'"':'')+' />'
-        +'<span class="acct-x" data-i="'+i+'" aria-label="계좌 삭제">✕</span>'
         +'</div>';
     });
     gid("finAcctList").innerHTML=rows||(
@@ -582,7 +587,10 @@
     gid("finExec").textContent="실제 "+num(I.totExecCap)+(I.totAlloc>0?" ("+Math.round(pct)+"%)":"");
     gid("finWait2").textContent="남음 "+num(I.investWait);
     const st=gid("savTag"); if(st) st.textContent="이번 달 "+won(sav);
-    I.per.forEach((p,i)=>{ const m=gid("acctMid"+i); if(m) m.textContent="실제 "+num(p.buy)+" · 남음 "+num(p.wait); });
+    I.per.forEach((p,i)=>{
+      const m=gid("acctMid"+i); if(m) m.textContent="배정 "+num(p.a)+" · 매수 "+num(p.buy)+" · 대기 "+num(p.wait);
+      const b=gid("acctBar"+i); if(b) b.style.width=(p.a>0?Math.max(0,Math.min(100,p.buy/p.a*100)):0)+"%";
+    });
   }
 
   function finChanged(){
