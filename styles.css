@@ -354,11 +354,12 @@
     grid-column:1; padding:18px 26px 2px;
   }
   #view-record .pad > .kpt-head{
-    grid-column:2; grid-row:1 / -1; align-self:start;
+    grid-column:2; grid-row:1 / -1; align-self:stretch;
     padding:18px 26px; border-left:1px solid var(--rule);
+    background:var(--paper);
   }
   #view-record .pad > .fin-head{
-    grid-column:3; grid-row:1 / -1; align-self:start;
+    grid-column:3; grid-row:1 / -1; align-self:stretch;
     padding:18px 24px; border-left:1px solid var(--rule);
     min-height:calc(100vh - 60px);
     margin-top:-60px; position:relative; z-index:32; background:var(--paper);
