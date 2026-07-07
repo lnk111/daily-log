@@ -212,7 +212,8 @@
   .acct-x{cursor:pointer; color:var(--faint); font-size:12px; line-height:1; padding:3px 5px; border-radius:6px; flex:none;}
   .acct-x:hover{background:var(--accent-soft); color:var(--prob);}
   .acct-card-hd{ display:contents; }  /* 모바일: flex 부모에 투명 — name·x가 직접 flex 자식처럼 동작 */
-  .acct-bar{ display:none; }           /* 모바일: 계좌별 진행바 숨김 */
+  .acct-bar{ display:block; height:8px; background:var(--track); border-radius:999px; margin:8px 0 10px; overflow:hidden; }
+  .acct-bar-fill{ height:100%; background:var(--indigo); border-radius:999px; transition:width .3s ease; }
   .fin-acct-edit{display:flex; gap:6px; margin-top:10px;}
   .fin-acct-edit input{flex:1; font-family:inherit; font-size:14px; border:1px solid var(--line); background:var(--bg); border-radius:9px; padding:8px 10px; color:var(--ink); outline:none;}
   .fin-acct-edit input:focus{border-color:var(--accent);}
