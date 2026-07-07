@@ -273,9 +273,9 @@
   .kgroup.keep .bar2{background:var(--keep);} .kgroup.keep .kh{color:var(--keep);}
   .kgroup.problem .bar2{background:var(--prob);} .kgroup.problem .kh{color:var(--prob);}
   .kgroup.try .bar2{background:var(--try);} .kgroup.try .kh{color:var(--try);}
-  .kentry{display:flex; gap:12px; padding:11px 0; border-bottom:1px solid #f1f1f3; font-size:14px; line-height:1.5;}
-  .kentry .when{flex:none; width:54px; font-size:12px; color:#71717a; font-weight:600; padding-top:1px;}
-  .kentry .what{color:#2b2b2b; white-space:pre-wrap;}
+  .kentry{display:flex; flex-direction:column; gap:4px; padding:10px 0; border-bottom:1px solid #f1f1f3; line-height:1.5;}
+  .kentry .when{font-size:11px; color:#71717a; font-weight:600;}
+  .kentry .what{font-size:14px; color:#2b2b2b; white-space:pre-wrap; line-height:1.5;}
   .kempty{font-size:13px; color:#a1a1aa; padding:6px 0;}
   .kentry:last-child{border-bottom:none;}
 
