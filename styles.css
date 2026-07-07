@@ -104,10 +104,11 @@
   .date-readout{text-align:right; font-size:12px; letter-spacing:.12em; color:var(--sub); padding-top:6px; white-space:nowrap;}
   .date-readout b{display:block; font-size:16px; letter-spacing:.02em; color:var(--ink); margin-top:3px; text-transform:none;}
   .section{margin-top:30px;}
-  .section h2{font-size:15px; font-weight:700; letter-spacing:-.01em; margin:0 0 10px;}
+  .section:not(.kpt-head):not(.fin-head){ margin-top:0; margin-bottom:8px; }
+  .section h2{font-size:15px; font-weight:700; letter-spacing:-.01em; margin:0 0 4px;}
   .section h2 .en{color:var(--faint); font-weight:600;}
   textarea{width:100%; border:0; outline:0; resize:none; font-family:inherit; color:var(--ink); background:transparent; font-size:15px; padding:0; margin:0; display:block; overflow:hidden;}
-  .ruled{font-size:14px; color:#3f3f46; line-height:var(--row); padding-top:6px; min-height:calc(var(--row) * 3);
+  .ruled{font-size:14px; color:#3f3f46; line-height:var(--row); padding-top:6px; min-height:var(--row);
     background-image:linear-gradient(to bottom,transparent calc(var(--row) - 1px),var(--rule) calc(var(--row) - 1px),var(--rule) var(--row));
     background-size:100% var(--row); background-position:0 6px; background-attachment:local;}
   .ruled::placeholder{color:var(--faint);}
@@ -363,11 +364,15 @@
   #view-record .pad > header.head{ display:none; }
   #view-record .pad > .section{ margin:0; }
   #view-record .pad > .section:not(.kpt-head):not(.fin-head){
-    grid-column:1; padding:12px 26px 2px;
+    grid-column:1; padding:6px 26px 2px;
   }
-  /* 일지 textarea: 2줄 최소 높이 (내용 적을 때 섹션 간격 줄임) */
+  /* 일지 섹션 제목 하단 간격 최소화 */
+  #view-record .pad > .section:not(.kpt-head):not(.fin-head) h2{
+    margin-bottom:2px;
+  }
+  /* 일지 textarea: 최소 높이 최소화 */
   #view-record .pad > .section:not(.kpt-head):not(.fin-head) .ruled{
-    min-height:calc(var(--row) * 2);
+    min-height:36px;
   }
   #view-record .pad > .kpt-head{
     grid-column:2; grid-row:1 / -1; align-self:stretch;
