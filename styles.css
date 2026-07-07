@@ -203,16 +203,16 @@
   .fin-note{font-size:12px; color:var(--cap); margin-top:8px; line-height:1.5;}
   .fin-empty{font-size:13px; color:var(--faint); padding:7px 0;}
   .acct-box{margin:4px 0 6px;}
-  .acct-row{display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid var(--line); font-size:14px;}
-  .acct-row:last-child{border-bottom:none;}
+  .acct-row{display:block; padding:10px 12px; margin-bottom:8px; border:1px solid var(--line); border-radius:12px; font-size:14px;}
+  .acct-row:last-child{margin-bottom:0;}
   .acct-name{flex:1; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .acct-mid{font-size:12px; color:var(--sub); white-space:nowrap;}
+  .acct-mid{display:block; font-size:12px; color:var(--sub); margin-bottom:4px;}
   .acct-alloc{width:128px; font-family:inherit; font-size:13px; font-weight:600; border:1px solid var(--line); background:var(--bg); border-radius:8px; padding:6px 8px; color:var(--ink); text-align:right; outline:none; flex:none;}
   .acct-alloc:focus{border-color:var(--accent);}
   .acct-x{cursor:pointer; color:var(--faint); font-size:12px; line-height:1; padding:3px 5px; border-radius:6px; flex:none;}
   .acct-x:hover{background:var(--accent-soft); color:var(--prob);}
-  .acct-card-hd{ display:contents; }  /* 모바일: flex 부모에 투명 — name·x가 직접 flex 자식처럼 동작 */
-  .acct-bar{ display:block; height:8px; background:var(--track); border-radius:999px; margin:8px 0 10px; overflow:hidden; }
+  .acct-card-hd{ display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+  .acct-bar{ display:block; width:100%; height:8px; background:var(--track); border-radius:999px; margin:8px 0 10px; overflow:hidden; }
   .acct-bar-fill{ height:100%; background:var(--indigo); border-radius:999px; transition:width .3s ease; }
   .fin-acct-edit{display:flex; gap:6px; margin-top:10px;}
   .fin-acct-edit input{flex:1; font-family:inherit; font-size:14px; border:1px solid var(--line); background:var(--bg); border-radius:9px; padding:8px 10px; color:var(--ink); outline:none;}
@@ -220,9 +220,6 @@
   .fin-i-btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--line);}
   .fin-i-btn.ghost:hover{border-color:var(--accent); opacity:1;}
   @media (max-width:560px){
-    .acct-row{flex-wrap:wrap; gap:6px;}
-    .acct-name{flex:1 0 100%;}
-    .acct-mid{flex:1;}
     .fin-card .fv{font-size:17px;}
     .fin-cards4{grid-template-columns:repeat(2,1fr);}
   }
@@ -235,30 +232,45 @@
   .kpt-line:focus{border-bottom-color:var(--accent);}
 
   /* ---------- calendar ---------- */
-  .cal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
-  .cal-title{font-size:20px; font-weight:800; letter-spacing:-.01em;}
-  .cal-nav{display:flex; gap:4px;}
+  /* 월 네비게이터: ◀ 2026년 6월 ▶ 가운데 */
+  .cal-head{display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:14px;}
+  #view-calendar .cal-nav{display:contents;}
+  .cal-title{font-size:18px; font-weight:700;}
+  #view-calendar .cal-title{order:2;}
+  #calPrev{order:1;} #calNext{order:3;}
+  #calToday{order:4; font-size:12px; padding:5px 10px;}
+  #view-calendar .icon-btn svg{width:16px; height:16px;}
+  /* 요일 헤더 */
   .wdrow{display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:6px;}
-  .wd{text-align:center; font-size:11.5px; font-weight:600; color:var(--faint); padding:4px 0;}
+  .wd{text-align:center; font-size:11px; font-weight:600; color:#9a9a9a; padding:4px 0;}
   .wd.sun{color:#B66;} .wd.sat{color:#67A;}
+  /* 날짜 그리드 */
   .grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
-  .cell{position:relative; aspect-ratio:1/1; border:1px solid transparent; border-radius:11px; background:var(--bg);
-    display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:all .12s ease;}
+  .cell{position:relative; border:1px solid transparent; border-radius:8px; background:var(--bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; padding:6px 0; transition:all .12s ease;}
   .cell:hover{border-color:var(--accent); background:var(--accent-soft);}
   .cell.empty{background:transparent; cursor:default; border-color:transparent;}
   .cell.empty:hover{background:transparent; border-color:transparent;}
-  .cell .num{font-size:14px; font-weight:600; color:var(--ink);}
-  .cell.out .num{color:var(--faint);}
-  .cell .mark{width:6px; height:6px; border-radius:999px; background:transparent; margin-top:4px;}
-  .cell.has .mark{background:var(--accent);}
-  .cell.today{border-color:var(--ink);}
+  .cell .num{font-size:12px; font-weight:600; color:var(--ink);}
+  .cell.out .num{color:#ccc;}
+  .cell .mark{width:4px; height:4px; border-radius:999px; background:transparent; margin:2px auto 0;}
+  .cell.has .mark{background:var(--ink);}
+  /* 오늘 */
+  .cell.today{background:var(--indigo); border:2px solid var(--ink); border-radius:8px;}
+  .cell.today .num{color:#fff; font-weight:700;}
+  .cell.today.has .mark{background:#fff;}
+  /* 선택된 날 */
   .cell.sel{background:var(--ink);}
   .cell.sel .num{color:#fff;} .cell.sel.has .mark{background:#fff;}
-  .legend{display:flex; gap:16px; margin-top:16px; font-size:12px; color:var(--sub); align-items:center;}
+  /* 범례 */
+  .legend{display:flex; gap:16px; margin-top:16px; font-size:11px; color:#9a9a9a; align-items:center;}
   .legend .swatch{display:inline-flex; align-items:center; gap:6px;}
   .legend .swatch i{width:7px;height:7px;border-radius:999px;display:inline-block;}
   .legend .swatch i.dot{background:var(--accent);} .legend .swatch i.ring{border:1.5px solid var(--ink);width:9px;height:9px;}
-  .cal-stat{margin-top:18px; font-size:13px; color:var(--ink); font-weight:600;}
+  /* 월 요약 배지 */
+  .cal-stat{margin-top:18px; font-size:13px; color:#6a6a6a; font-weight:600;
+    background:var(--track); border-radius:10px; padding:6px 13px;
+    width:fit-content; margin-left:auto; margin-right:auto; text-align:center;}
   .cal-stat span{color:var(--accent);}
 
   /* ---------- review ---------- */
@@ -441,7 +453,7 @@
   #view-record .pad .fin-head{ padding-bottom:110px; }
 
   /* 달력: 가운데 단일 컬럼 */
-  #view-calendar{ max-width:840px; margin:0 auto; }
+  #view-calendar{ max-width:600px; margin:0 auto; }
 
   /* 회고: 사이드바 오른쪽~화면 끝 전체 폭 */
   #view-review{ max-width:none; margin:0; }
