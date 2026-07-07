@@ -129,6 +129,7 @@
     if(v!==currentView){ clearTimeout(saveTimer); flushSave(); }
     currentView=v;
     document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.view===v));
+    document.querySelectorAll(".bnav-item").forEach(t=>t.classList.toggle("active", t.dataset.view===v));
     document.querySelectorAll(".view").forEach(s=>s.classList.toggle("active", s.id==="view-"+v));
     if(v==="record") requestAnimationFrame(growAll);   // 탭으로 돌아오면 숨김 상태에서 접힌 칸을 다시 펼침
     if(v==="calendar") renderCalendar();
@@ -137,6 +138,7 @@
     window.scrollTo({top:0,behavior:"auto"});
   }
   document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>setView(t.dataset.view));
+  document.querySelectorAll(".bnav-item").forEach(t=>t.onclick=()=>setView(t.dataset.view));
 
   /* ===================== CALENDAR ===================== */
   let calMonth=(function(){const d=parseYmd(current);d.setDate(1);return d;})();

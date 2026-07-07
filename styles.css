@@ -3,7 +3,8 @@
     --ink:#1B1B1B; --sub:#6E6A63; --faint:#9C988F;
     --rule:#E7E4DE; --rule-strong:#1B1B1B;
     --accent:#8C7459; --accent-soft:#F1EBE2;
-    --keep:#3F6F52; --prob:#9C5B4C; --try:#5A6B8C;
+    --keep:#2f9e69; --prob:#d9694f; --try:#3f7cc0;
+    --indigo:#5b5bd6; --indigo-tint:#ecebfb; --indigo-text:#4a45c7;
     --row:40px; --maxw:760px;
   }
   *{box-sizing:border-box;}
@@ -37,7 +38,7 @@
   .avatar.on{display:grid;} .avatar:hover{background:var(--accent); filter:brightness(.92);}
 
   /* segmented tabs */
-  .tabs{max-width:var(--maxw); margin:0 auto; padding:0 20px 12px; display:flex; gap:6px;}
+  .tabs{max-width:var(--maxw); margin:0 auto; padding:0 20px 12px; display:none; gap:6px;}
   .tab{flex:1; appearance:none; border:1px solid var(--rule); background:var(--paper);
     color:var(--sub); font-family:inherit; font-size:13.5px; font-weight:600;
     padding:9px 10px; border-radius:10px; cursor:pointer; transition:all .15s ease; display:flex; align-items:center; justify-content:center; gap:6px;}
@@ -148,7 +149,7 @@
   .chev{font-style:normal; color:var(--faint); font-size:13px; transition:transform .2s ease;}
   .chev.up{transform:rotate(180deg);}
   .inv-detail{margin-top:10px;}
-  .fin-fab{position:sticky; bottom:14px; width:100%; margin-top:24px; border:0; border-radius:999px; background:var(--ink); color:#fff; font-family:inherit; font-size:15px; font-weight:700; padding:15px; cursor:pointer;}
+  .fin-fab{position:sticky; bottom:14px; width:100%; margin-top:24px; border:0; border-radius:999px; background:var(--indigo); color:#fff; font-family:inherit; font-size:15px; font-weight:700; padding:15px; cursor:pointer;}
   .fin-fab i{font-style:normal; margin-right:2px;}
   .fin-fab:active{transform:scale(.99);}
   .sheet-backdrop{position:fixed; inset:0; background:rgba(20,18,15,.42); z-index:60;}
@@ -284,4 +285,16 @@
     .title{font-size:25px;} .date-readout{font-size:11px;} .date-readout b{font-size:14px;}
     .cell .num{font-size:13px;} .brand{font-size:14px;}
   }
+  /* ---------- 서브세그먼트 (기록 탭 내 일지/회고/가계부) ---------- */
+  .sub-seg-bar{margin:8px 20px 10px; padding:3px; display:flex; gap:0; background:#f4f4f5; border-radius:11px;}
+  .sub-tab{flex:1; appearance:none; border:0; background:transparent; color:#71717a; font-family:inherit; font-size:13px; font-weight:600; padding:8px 10px; border-radius:9px; cursor:pointer; transition:all .15s ease;}
+  .sub-tab.active{background:var(--indigo); color:#fff;}
+
+  /* ---------- 하단 탭바 ---------- */
+  .bottom-nav{position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--paper); border-top:1px solid var(--rule); display:flex; padding-bottom:env(safe-area-inset-bottom);}
+  .bnav-item{flex:1; appearance:none; border:0; background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:10px 0; cursor:pointer; color:var(--faint); font-family:inherit; font-size:11px; font-weight:600; letter-spacing:.02em; transition:color .15s ease;}
+  .bnav-item svg{width:22px; height:22px;}
+  .bnav-item.active{color:var(--indigo);}
+  .bnav-item:active{transform:scale(.94);}
+
   @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
