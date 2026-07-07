@@ -298,3 +298,94 @@
   .bnav-item:active{transform:scale(.94);}
 
   @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+
+/* ================= PC / 데스크톱 (900px+) — 사이드바 + 3컬럼 ================= */
+@media (min-width:900px){
+  :root{ --sidebar:220px; }
+
+  /* 컨테이너 전체폭 */
+  .bar-row, main, .tabs, .panel, .due{ max-width:none; }
+
+  /* 상단 바: 브랜드 숨기고 우측 아이콘만, 콘텐츠 영역 위에만 */
+  .bar{ margin-left:var(--sidebar); }
+  .bar-row{ padding:12px 26px; justify-content:flex-end; }
+  .bar-row .brand{ display:none; }
+
+  /* 좌측 사이드바 (하단탭 → 세로) */
+  .bottom-nav{
+    top:0; right:auto; bottom:0; width:var(--sidebar); height:100vh;
+    flex-direction:column; align-items:stretch; justify-content:flex-start;
+    border-top:none; border-right:1px solid var(--rule);
+    padding:62px 12px 18px; gap:4px; background:var(--paper); box-sizing:border-box; z-index:31;
+  }
+  .bottom-nav::before{
+    content:"📓  데일리 로그"; position:absolute; top:20px; left:16px;
+    font-size:15px; font-weight:800; color:var(--ink); letter-spacing:-.2px;
+  }
+  .bnav-item{
+    flex:none; flex-direction:row; justify-content:flex-start; gap:10px;
+    padding:9px 12px; border-radius:10px; font-size:14px; font-weight:600; color:var(--sub);
+  }
+  .bnav-item svg{ width:18px; height:18px; }
+  .bnav-item.active{ background:var(--indigo-tint); color:var(--indigo-text); }
+
+  /* 본문·칩을 사이드바만큼 밀기 */
+  main{ margin-left:var(--sidebar); }
+  .status{ left:var(--sidebar); }
+
+  /* 날짜 줄: 상단 왼쪽 정렬 */
+  #view-record .datenav{
+    justify-content:flex-start; padding:18px 26px 14px; margin:0;
+    border-bottom:1px solid var(--rule);
+  }
+
+  /* 기록 탭 3컬럼 (일지 | 회고 | 가계부 레일) */
+  #view-record .pad{
+    display:grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr) 330px;
+    gap:0; padding:0 0 28px; align-items:start;
+  }
+  #view-record .pad > header.head{ display:none; }
+  #view-record .pad > .section{ margin:0; }
+  #view-record .pad > .section:not(.kpt-head):not(.fin-head){
+    grid-column:1; padding:18px 26px 2px;
+  }
+  #view-record .pad > .kpt-head{
+    grid-column:2; grid-row:1 / span 3; align-self:start;
+    padding:18px 26px; border-left:1px solid var(--rule);
+  }
+  #view-record .pad > .fin-head{
+    grid-column:3; grid-row:1 / span 3; align-self:start;
+    padding:18px 24px; border-left:1px solid var(--rule);
+  }
+
+  /* 컬럼 라벨 (일지 / 회고 / 가계부) */
+  #view-record .pad > .section:not(.kpt-head):not(.fin-head):first-of-type::before{
+    content:"일지"; display:block; font-size:12px; color:var(--faint); margin-bottom:10px;
+  }
+  #view-record .pad > .kpt-head > h2,
+  #view-record .pad > .fin-head > h2{
+    font-size:12px; color:var(--faint); font-weight:600; border:0; padding:0; margin:0 0 6px;
+  }
+  #view-record .pad > .fin-head > h2 .en{ display:none; }
+
+  /* KPT 카드 (테두리 + 왼쪽 색 바) */
+  .kpt-head .kpt-item{
+    border:1px solid var(--rule); border-left-width:5px; border-radius:12px;
+    padding:12px 14px; margin-top:12px;
+  }
+  .kpt-head .kpt-item:has(.lab.keep){ border-left-color:var(--keep); }
+  .kpt-head .kpt-item:has(.lab.problem){ border-left-color:var(--prob); }
+  .kpt-head .kpt-item:has(.lab.try){ border-left-color:var(--try); }
+  .kpt-head .kpt-item .lab{ font-size:12px; font-weight:700; margin-bottom:5px; }
+  .kpt-head .kpt-item .kpt-line{ border-bottom:none; }
+
+  /* 가계부 레일: 기록하기 버튼 정적 배치 */
+  .fin-head .fin-fab{ position:static; margin-top:16px; }
+
+  /* 하단 여백 축소 (사이드바라 하단탭 여백 불필요) */
+  #view-record .pad{ padding-bottom:24px; }
+
+  /* 달력·회고: 가운데 단일 컬럼 */
+  #view-calendar, #view-review{ max-width:840px; margin:0 auto; }
+}
