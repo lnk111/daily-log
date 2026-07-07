@@ -97,25 +97,36 @@
         <button class="today-btn" id="todayBtn">오늘</button>
       </div>
 
+      <div class="sub-seg-bar" id="subSegBar">
+        <button class="sub-tab active" data-seg="log">일지</button>
+        <button class="sub-tab" data-seg="kpt">회고</button>
+        <button class="sub-tab" data-seg="ledger">가계부</button>
+      </div>
+
       <div class="pad">
         <header class="head">
           <div class="title">Daily<br>Log</div>
           <div class="date-readout">DATE<b id="headDate">—</b></div>
         </header>
 
+        <div class="sub-view active" data-seg="log">
         <section class="section"><h2>🌅 아침 <span class="en">Log</span></h2>
           <textarea class="ruled" data-field="morning" placeholder="오늘 아침 어떻게 시작했나요? 컨디션, 다짐, 첫 할 일…"></textarea></section>
         <section class="section"><h2>🏢 회사 <span class="en">Log</span></h2>
           <textarea class="ruled" data-field="work" placeholder="현장·고객·팀 이슈, 오늘 처리한 일과 결정…"></textarea></section>
         <section class="section"><h2>🌙 저녁 <span class="en">Log</span></h2>
           <textarea class="ruled" data-field="evening" placeholder="하루를 닫으며 — 마무리한 일, 내일로 넘긴 일, 느낀 점…"></textarea></section>
+        </div>
 
+        <div class="sub-view" data-seg="kpt">
         <section class="section kpt-head"><h2>🔁 KPT 회고</h2>
           <div class="kpt-item"><div class="lab keep">Keep</div><textarea class="kpt-line" data-field="keep" rows="1" placeholder="계속 이어갈 것"></textarea></div>
           <div class="kpt-item"><div class="lab problem">Problem</div><textarea class="kpt-line" data-field="problem" rows="1" placeholder="아쉽거나 막혔던 것"></textarea></div>
           <div class="kpt-item"><div class="lab try">Try</div><textarea class="kpt-line" data-field="try" rows="1" placeholder="다음에 시도해볼 것"></textarea></div>
         </section>
+        </div>
 
+        <div class="sub-view" data-seg="ledger">
         <section class="section fin-head">
           <h2>💰 가계부 <span class="en">매월 1일 투자·적금 0원 초기화</span></h2>
           <div class="fin-hero">
@@ -181,6 +192,7 @@
             <button class="sheet-add" id="sheetAdd">추가</button>
           </div>
         </section>
+        </div>
       </div>
     </section>
 

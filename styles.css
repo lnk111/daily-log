@@ -292,9 +292,10 @@
     .cell .num{font-size:13px;} .brand{font-size:14px;}
   }
   /* ---------- 서브세그먼트 (기록 탭 내 일지/회고/가계부) ---------- */
-  .sub-seg-bar{margin:8px 20px 10px; padding:3px; display:flex; gap:0; background:#f4f4f5; border-radius:11px;}
-  .sub-tab{flex:1; appearance:none; border:0; background:transparent; color:#71717a; font-family:inherit; font-size:13px; font-weight:600; padding:8px 10px; border-radius:9px; cursor:pointer; transition:all .15s ease;}
-  .sub-tab.active{background:var(--indigo); color:#fff;}
+  .sub-seg-bar{display:flex; gap:4px; background:#f4f4f5; border-radius:11px; padding:3px; margin:10px 20px;}
+  .sub-tab{flex:1; appearance:none; border:0; background:transparent; color:#71717a; font-family:inherit; font-size:14px; font-weight:600; padding:8px; border-radius:9px; cursor:pointer; transition:all .15s ease;}
+  .sub-tab.active{background:#5b5bd6; color:#fff;}
+  .sub-view{display:none;} .sub-view.active{display:block;}
 
   /* ---------- 하단 탭바 ---------- */
   .bottom-nav{position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--paper); border-top:1px solid var(--rule); display:flex; padding-bottom:env(safe-area-inset-bottom);}
@@ -357,6 +358,10 @@
   /* 생활비 히어로 숫자 PC 레일: 30px */
   #view-record .fin-head .hero-num{ font-size:30px; }
 
+  /* PC: 서브세그먼트 바 숨기고 모든 sub-view 표시 */
+  .sub-seg-bar{ display:none; }
+  #view-record .sub-view{ display:block; }
+
   /* 기록 탭 3컬럼 (일지 | 회고 | 가계부 레일) */
   #view-record .pad{
     display:grid;
@@ -365,39 +370,42 @@
     gap:0; padding:0 0 0; align-items:start;
   }
   #view-record .pad > header.head{ display:none; }
-  #view-record .pad > .section{ margin:0; }
-  #view-record .pad > .section:not(.kpt-head):not(.fin-head){
-    grid-column:1; padding:6px 26px 2px;
+  #view-record .pad > .sub-view[data-seg="log"]{ grid-column:1; grid-row:1 / -1; }
+  #view-record .pad > .sub-view[data-seg="kpt"]{ grid-column:2; grid-row:1 / -1; }
+  #view-record .pad > .sub-view[data-seg="ledger"]{ grid-column:3; grid-row:1 / -1; }
+  #view-record .pad .section{ margin:0; }
+  #view-record .pad .section:not(.kpt-head):not(.fin-head){
+    padding:6px 26px 2px;
   }
   /* 일지 섹션 제목 하단 간격 최소화 */
-  #view-record .pad > .section:not(.kpt-head):not(.fin-head) h2{
+  #view-record .pad .section:not(.kpt-head):not(.fin-head) h2{
     margin-bottom:2px;
   }
   /* 일지 textarea: 최소 높이 최소화 */
-  #view-record .pad > .section:not(.kpt-head):not(.fin-head) .ruled{
+  #view-record .pad .section:not(.kpt-head):not(.fin-head) .ruled{
     min-height:36px;
   }
-  #view-record .pad > .kpt-head{
-    grid-column:2; grid-row:1 / -1; align-self:stretch;
+  #view-record .pad .kpt-head{
+    align-self:stretch;
     padding:18px 26px; border-left:1px solid #e4e4e7;
     background:#ffffff;
   }
-  #view-record .pad > .fin-head{
-    grid-column:3; grid-row:1 / -1; align-self:stretch;
+  #view-record .pad .fin-head{
+    align-self:stretch;
     padding:18px 24px; border-left:1px solid #e4e4e7;
     min-height:calc(100vh - 60px);
     margin-top:-60px; position:relative; z-index:32; background:#fafafa;
   }
 
   /* 컬럼 라벨 (일지 / 회고 / 가계부) */
-  #view-record .pad > .section:not(.kpt-head):not(.fin-head):first-of-type::before{
+  #view-record .pad .sub-view[data-seg="log"] .section:first-child::before{
     content:"일지"; display:block; font-size:12px; color:var(--faint); margin-bottom:10px;
   }
-  #view-record .pad > .kpt-head > h2,
-  #view-record .pad > .fin-head > h2{
+  #view-record .pad .kpt-head > h2,
+  #view-record .pad .fin-head > h2{
     font-size:12px; color:var(--faint); font-weight:600; border:0; padding:0; margin:0 0 6px;
   }
-  #view-record .pad > .fin-head > h2 .en{ display:none; }
+  #view-record .pad .fin-head > h2 .en{ display:none; }
 
   /* KPT 카드 (테두리 + 왼쪽 색 바) */
   .kpt-head .kpt-item{
@@ -426,7 +434,7 @@
 
   /* 하단 여백: 플로팅 버튼이 콘텐츠 가리지 않게 */
   #view-record .pad{ padding-bottom:110px; }
-  #view-record .pad > .fin-head{ padding-bottom:110px; }
+  #view-record .pad .fin-head{ padding-bottom:110px; }
 
   /* 달력: 가운데 단일 컬럼 */
   #view-calendar{ max-width:840px; margin:0 auto; }

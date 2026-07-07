@@ -140,6 +140,17 @@
   document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>setView(t.dataset.view));
   document.querySelectorAll(".bnav-item").forEach(t=>t.onclick=()=>setView(t.dataset.view));
 
+  /* ===================== SUB-SEGMENT (모바일 기록 탭) ===================== */
+  let currentSeg="log";
+  function setSubSeg(seg){
+    currentSeg=seg;
+    document.querySelectorAll(".sub-tab").forEach(b=>b.classList.toggle("active",b.dataset.seg===seg));
+    document.querySelectorAll("#view-record .sub-view").forEach(v=>v.classList.toggle("active",v.dataset.seg===seg));
+    if(seg==="log"||seg==="kpt") requestAnimationFrame(growAll);
+  }
+  document.querySelectorAll(".sub-tab").forEach(b=>b.onclick=()=>setSubSeg(b.dataset.seg));
+  setSubSeg("log");
+
   /* ===================== CALENDAR ===================== */
   let calMonth=(function(){const d=parseYmd(current);d.setDate(1);return d;})();
   function renderCalendar(){
