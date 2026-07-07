@@ -210,23 +210,30 @@
     <!-- ===== REVIEW ===== -->
     <section class="view" id="view-review">
       <div class="pad">
-        <div class="seg" role="tablist">
-          <button id="segWeek" role="tab" aria-selected="true">주간</button>
-          <button id="segMonth" role="tab" aria-selected="false">월간</button>
-        </div>
-        <div class="rev-head">
-          <div class="rev-title" id="revTitle">—</div>
+        <!-- A: 상단바 — seg 왼쪽, cal-nav 오른쪽 -->
+        <div class="rev-topbar">
+          <div class="seg" role="tablist">
+            <button id="segWeek" role="tab" aria-selected="true">주간</button>
+            <button id="segMonth" role="tab" aria-selected="false">월간</button>
+          </div>
           <div class="cal-nav">
             <button class="icon-btn" id="revPrev" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
             <button class="icon-btn" id="revNext" aria-label="다음"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
           </div>
         </div>
-        <div class="rev-stat" id="revStat"></div>
+        <!-- B: 제목 블록 -->
+        <div class="rev-title-block">
+          <div class="rev-title" id="revTitle">—</div>
+          <div class="rev-stat" id="revStat"></div>
+        </div>
+        <!-- 재정 요약 카드 -->
         <div class="fin-cards4" id="revFinCards"></div>
-
-        <div class="kgroup keep"><div class="kh"><span class="bar2"></span>Keep · 계속할 것</div><div id="revKeep"></div></div>
-        <div class="kgroup problem"><div class="kh"><span class="bar2"></span>Problem · 아쉬운 것</div><div id="revProblem"></div></div>
-        <div class="kgroup try"><div class="kh"><span class="bar2"></span>Try · 시도할 것</div><div id="revTry"></div></div>
+        <!-- C: KPT 3컬럼 카드 -->
+        <div class="kpt-grid">
+          <div class="kgroup keep"><div class="kh"><span class="bar2"></span>Keep · 계속할 것</div><div id="revKeep"></div></div>
+          <div class="kgroup problem"><div class="kh"><span class="bar2"></span>Problem · 아쉬운 것</div><div id="revProblem"></div></div>
+          <div class="kgroup try"><div class="kh"><span class="bar2"></span>Try · 시도할 것</div><div id="revTry"></div></div>
+        </div>
       </div>
     </section>
   </main>

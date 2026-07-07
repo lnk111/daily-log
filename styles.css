@@ -260,12 +260,14 @@
   /* ---------- review ---------- */
   .seg{display:inline-flex; background:var(--paper); border:1px solid var(--rule); border-radius:999px; padding:3px; margin-bottom:4px;}
   .seg button{appearance:none; border:0; background:transparent; font-family:inherit; font-size:13px; font-weight:600; color:var(--sub); padding:7px 16px; border-radius:999px; cursor:pointer;}
-  .seg button[aria-selected=true]{background:var(--ink); color:#fff;}
-  .rev-head{display:flex; align-items:center; justify-content:space-between; margin:16px 0 6px;}
-  .rev-title{font-size:18px; font-weight:800;}
-  .rev-stat{font-size:13px; color:var(--sub); margin-bottom:22px;}
+  .seg button[aria-selected=true]{background:var(--indigo); color:#fff;}
+  .rev-topbar{display:flex; align-items:center; justify-content:space-between; margin:0 0 16px;}
+  .rev-title-block{margin:0 0 4px;}
+  .rev-title{font-size:20px; font-weight:800; line-height:1.2;}
+  .rev-stat{font-size:13px; color:var(--sub); margin-top:4px; margin-bottom:18px;}
   .rev-stat b{color:var(--accent);}
-  .kgroup{margin-top:26px;}
+  .kpt-grid{display:flex; flex-direction:column; gap:16px;}
+  .kgroup{margin-top:0;}
   .kgroup > .kh{display:flex; align-items:center; gap:8px; font-size:15px; font-weight:700; margin-bottom:12px;}
   .kgroup > .kh .bar2{width:4px; height:16px; border-radius:2px;}
   .kgroup.keep .bar2{background:var(--keep);} .kgroup.keep .kh{color:var(--keep);}
@@ -275,6 +277,7 @@
   .kentry .when{flex:none; width:54px; font-size:12px; color:var(--faint); font-weight:600; padding-top:1px;}
   .kentry .what{color:var(--ink); white-space:pre-wrap;}
   .kempty{font-size:13px; color:var(--faint); padding:6px 0;}
+  .kentry:last-child{border-bottom:none;}
 
   /* save chip */
   .status{position:fixed; left:0; right:0; bottom:0; z-index:25; display:flex; justify-content:center; pointer-events:none; padding-bottom:calc(18px + env(safe-area-inset-bottom));}
@@ -425,8 +428,16 @@
   #view-record .pad{ padding-bottom:110px; }
   #view-record .pad > .fin-head{ padding-bottom:110px; }
 
-  /* 달력·회고: 가운데 단일 컬럼 */
-  #view-calendar, #view-review{ max-width:840px; margin:0 auto; }
+  /* 달력: 가운데 단일 컬럼 */
+  #view-calendar{ max-width:840px; margin:0 auto; }
+
+  /* 회고: 사이드바 오른쪽~화면 끝 전체 폭 */
+  #view-review{ max-width:none; margin:0; }
+  #view-review .pad{ padding:26px 26px 80px; }
+
+  /* 회고 탭 KPT 3컬럼 카드 */
+  #view-review .kpt-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  #view-review .kgroup{ border:1px solid var(--rule); border-radius:12px; padding:14px; }
 
   /* ── 가계부 레일 다듬기 ── */
 
