@@ -133,15 +133,17 @@
           </div>
 
           <div class="fin-sec">
-            <button class="inv-summary" id="invToggle" aria-expanded="false">
-              <span class="is-l">
-                <span class="is-title">투자 <span class="fin-profit zero" id="invProfit">＋0원</span></span>
-                <span class="is-sub"><span id="finExec">실제 0</span> · 계획 <span id="invAllocTotal">0</span> · <span id="finWait2">남음 0</span></span>
-              </span>
+            <div class="fin-sec-h">투자</div>
+            <!-- app.js 참조용 숨김 요소: 삭제 시 에러 발생하므로 유지 -->
+            <button id="invToggle" style="display:none" aria-expanded="true">
+              <span class="fin-profit zero" id="invProfit">＋0원</span>
+              <span id="finExec">실제 0</span>
+              <span id="invAllocTotal">0</span>
+              <span id="finWait2">남음 0</span>
               <i class="chev" id="invChev">▾</i>
             </button>
-            <div class="fin-bar"><div class="fin-bar-fill" id="finBarFill"></div></div>
-            <div class="inv-detail" id="invDetail" hidden>
+            <div style="display:none"><div class="fin-bar-fill" id="finBarFill"></div></div>
+            <div class="inv-detail" id="invDetail">
               <div id="finAcctList" class="acct-box"></div>
               <div class="fin-acct-edit">
                 <input type="text" id="acctNew" placeholder="계좌 추가 (예: 토스증권)" />
