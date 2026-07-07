@@ -400,8 +400,9 @@
     filter:brightness(.9); transform:translateY(-2px);
   }
 
-  /* 하단 여백: 사이드바라 하단탭 여백 불필요 */
-  #view-record .pad{ padding-bottom:0; }
+  /* 하단 여백: 플로팅 버튼이 콘텐츠 가리지 않게 */
+  #view-record .pad{ padding-bottom:110px; }
+  #view-record .pad > .fin-head{ padding-bottom:110px; }
 
   /* 달력·회고: 가운데 단일 컬럼 */
   #view-calendar, #view-review{ max-width:840px; margin:0 auto; }
