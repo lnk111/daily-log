@@ -317,8 +317,8 @@
   .bottom-nav{
     top:0; right:auto; bottom:0; width:var(--sidebar); height:100vh;
     flex-direction:column; align-items:stretch; justify-content:flex-start;
-    border-top:none; border-right:1px solid var(--rule);
-    padding:62px 12px 18px; gap:4px; background:var(--paper); box-sizing:border-box; z-index:31;
+    border-top:none; border-right:1px solid #e4e4e7;
+    padding:62px 12px 18px; gap:4px; background:#fafafa; box-sizing:border-box; z-index:31;
   }
   .bottom-nav::before{
     content:"📓  데일리 로그"; position:absolute; top:20px; left:16px;
@@ -355,14 +355,14 @@
   }
   #view-record .pad > .kpt-head{
     grid-column:2; grid-row:1 / -1; align-self:stretch;
-    padding:18px 26px; border-left:1px solid var(--rule);
-    background:var(--paper);
+    padding:18px 26px; border-left:1px solid #e4e4e7;
+    background:#ffffff;
   }
   #view-record .pad > .fin-head{
     grid-column:3; grid-row:1 / -1; align-self:stretch;
-    padding:18px 24px; border-left:1px solid var(--rule);
+    padding:18px 24px; border-left:1px solid #e4e4e7;
     min-height:calc(100vh - 60px);
-    margin-top:-60px; position:relative; z-index:32; background:var(--paper);
+    margin-top:-60px; position:relative; z-index:32; background:#fafafa;
   }
 
   /* 컬럼 라벨 (일지 / 회고 / 가계부) */
@@ -455,12 +455,15 @@
   /* ── PC 통합 상단 바 + 사이드바 프로필 ── */
 
   /* .bar 반투명 제거 → PC에서 solid 배경 (fixed 자식 위치 기준 보정) */
-  .bar{ backdrop-filter:none; -webkit-backdrop-filter:none; background:var(--paper); }
+  .bar{ backdrop-filter:none; -webkit-backdrop-filter:none; background:#ffffff; }
+
+  /* 일지 컬럼 흰색 배경 (섹션 사이 틈 없게) */
+  body:has(#view-record.active) main{ background:#ffffff; }
 
   /* 기록 뷰: datenav를 뷰포트 상단 고정 바로 승격 (bar-row 시각적으로 덮음) */
   #view-record .datenav{
     position:fixed; top:0; left:var(--sidebar); right:calc((100vw - var(--sidebar)) / 3); height:60px;
-    z-index:35; background:var(--paper); border-bottom:1px solid var(--rule);
+    z-index:35; background:#ffffff; border-bottom:1px solid #e4e4e7;
     padding:0 20px; margin:0;
     display:flex; align-items:center; justify-content:flex-start; gap:12px;
   }
