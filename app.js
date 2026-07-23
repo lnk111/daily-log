@@ -87,6 +87,7 @@
     checkDue();
     if(currentView==="calendar") renderCalendar();
     if(currentView==="review") renderReview();
+    if(currentView==="ledger") renderLedger();
   }
   function queueSave(){ if(loading)return; showChip("저장 중…","check",true); clearTimeout(saveTimer); saveTimer=setTimeout(flushSave,600); }
 
@@ -134,6 +135,7 @@
     if(v==="record") requestAnimationFrame(growAll);   // 탭으로 돌아오면 숨김 상태에서 접힌 칸을 다시 펼침
     if(v==="calendar") renderCalendar();
     if(v==="review") renderReview();
+    if(v==="ledger") renderLedger();
     checkDue();
     window.scrollTo({top:0,behavior:"auto"});
   }
@@ -251,6 +253,168 @@
   document.getElementById("segMonth").onclick=()=>setRevMode("month");
   document.getElementById("revPrev").onclick=()=>{ revAnchor.setDate(revAnchor.getDate()-(revMode==="week"?7:0)); if(revMode==="month")revAnchor.setMonth(revAnchor.getMonth()-1); renderReview(); };
   document.getElementById("revNext").onclick=()=>{ revAnchor.setDate(revAnchor.getDate()+(revMode==="week"?7:0)); if(revMode==="month")revAnchor.setMonth(revAnchor.getMonth()+1); renderReview(); };
+
+  /* ===================== LEDGER (가계부) ===================== */
+  let ledMode="month";                // 'week' | 'month'
+  let ledAnchor=parseYmd(current);    // 활성 기간 안의 임의 날짜
+  function ledRange(){
+    if(ledMode==="week"){
+      const s=new Date(ledAnchor); s.setDate(s.getDate()-s.getDay()); s.setHours(0,0,0,0);
+      const e=new Date(s); e.setDate(e.getDate()+6);
+      return {start:s,end:e};
+    }
+    const s=new Date(ledAnchor.getFullYear(),ledAnchor.getMonth(),1);
+    const e=new Date(ledAnchor.getFullYear(),ledAnchor.getMonth()+1,0);
+    return {start:s,end:e};
+  }
+  function ledLabel(r){
+    if(ledMode==="week"){
+      const sameMonth=r.start.getMonth()===r.end.getMonth();
+      const a=(r.start.getMonth()+1)+"월 "+r.start.getDate()+"일";
+      const b=(sameMonth?"":(r.end.getMonth()+1)+"월 ")+r.end.getDate()+"일";
+      return a+" – "+b;
+    }
+    return ledAnchor.getFullYear()+"년 "+(ledAnchor.getMonth()+1)+"월";
+  }
+
+  /* 내용(label) 키워드 기반 자동 분류 — 데이터 구조 변경 없음 */
+  const CAT_RULES=[
+    {cat:"식비",     kw:["밥","점심","저녁","아침","커피","카페","스벅","스타벅스","배달","식당","마트","편의점","음식","간식","치킨","분식","피자","버거","술","맥주","회식","브런치","디저트","빵","김밥","라면"]},
+    {cat:"교통",     kw:["택시","버스","지하철","기차","ktx","srt","주유","기름","카카오t","교통","주차","톨게이트","하이패스","항공","비행기","렌터카"]},
+    {cat:"주거·통신", kw:["월세","관리비","전기","가스","수도","인터넷","통신","핸드폰","휴대폰","요금","공과금","렌트","보증금","도시가스"]},
+    {cat:"생활",     kw:["다이소","쿠팡","생필품","세제","휴지","생활","이케아","잡화","마켓컬리"]},
+    {cat:"건강",     kw:["병원","약국","약","헬스","운동","치과","한의원","진료","영양제","pt","필라테스","요가"]},
+    {cat:"문화·여가", kw:["영화","책","넷플릭스","구독","게임","여행","공연","전시","유튜브","티빙","웨이브","콘서트","노래방","숙박","호텔"]},
+    {cat:"쇼핑",     kw:["옷","의류","신발","쇼핑","화장품","가방","무신사","백화점","올리브영","악세"]},
+    {cat:"경조사",   kw:["축의금","조의금","경조사","선물","용돈","기부","부의"]}
+  ];
+  function catOf(label){
+    const s=String(label||"").toLowerCase();
+    for(const r of CAT_RULES){ for(const k of r.kw){ if(s.indexOf(k)>=0) return r.cat; } }
+    return "기타";
+  }
+  const CAT_COLORS={ "식비":"#d9694f","교통":"#3f7cc0","주거·통신":"#5b5bd6","생활":"#8C7459","건강":"#2f9e69","문화·여가":"#c05fa8","쇼핑":"#d98a2b","경조사":"#7a8a99","기타":"#a1a1aa" };
+
+  function renderLedger(){
+    const r=ledRange();
+    document.getElementById("ledTitle").textContent=ledLabel(r);
+    let inc=0,exp=0,buy=0,sav=0, daysRec=0;
+    const dayExp={};      // ds -> 지출 합계
+    const catSum={};      // cat -> 지출 합계
+    const items=[];       // {date,kind,label,amount}
+    const cur=new Date(r.start);
+    while(cur<=r.end){
+      const ds=ymd(cur), o=entries[ds], f=o&&o.fin;
+      let dEx=0;
+      if(f){
+        inc+=finSum(f.inc); exp+=finSum(f.exp); buy+=finSum(f.buy); sav+=finSum(f.sav);
+        dEx=finSum(f.exp);
+        if(finHasContent(f)) daysRec++;
+        (f.inc||[]).forEach(x=>items.push({date:ds,kind:"inc",label:x.label||"수입",amount:+x.amount||0}));
+        (f.exp||[]).forEach(x=>{ const a=+x.amount||0; items.push({date:ds,kind:"exp",label:x.label||"지출",amount:a}); const c=catOf(x.label); catSum[c]=(catSum[c]||0)+a; });
+      }
+      dayExp[ds]=dEx;
+      cur.setDate(cur.getDate()+1);
+    }
+    const net=inc-exp;
+    const span=ledMode==="week"?7:r.end.getDate();
+    document.getElementById("ledStat").innerHTML="이 기간 <b>"+daysRec+"</b>일 기록 · 총 "+span+"일";
+
+    document.getElementById("ledSummary").innerHTML=
+      '<div class="led-hero '+(net>=0?"pos":"neg")+'">'
+      +'<div class="lh-lab">이 기간 순저축 <span>수입 − 지출</span></div>'
+      +'<div class="lh-num">'+(net>=0?"＋":"－")+won(Math.abs(net))+'</div></div>'
+      +'<div class="fin-cards4">'
+      +revFinCard("수입",inc)+revFinCard("지출",exp)+revFinCard("투자 매수",buy)+revFinCard("적금",sav)
+      +'</div>';
+
+    renderLedBars(r,dayExp);
+    renderLedCats(catSum,exp);
+    renderLedList(items);
+  }
+
+  function jumpToDay(ds){ current=ds; renderDate(); loadDayFromCache(); setView("record"); setSubSeg("ledger"); }
+
+  function renderLedBars(r,dayExp){
+    const box=document.getElementById("ledBars"); box.innerHTML="";
+    let max=0; for(const k in dayExp) if(dayExp[k]>max) max=dayExp[k];
+    if(max===0){ box.innerHTML='<div class="kempty">이 기간 지출 기록이 없어요.</div>'; return; }
+    const today=todayStr();
+    const frag=document.createDocumentFragment();
+    const cur=new Date(r.start);
+    while(cur<=r.end){
+      const ds=ymd(cur), v=dayExp[ds]||0, h=Math.round(v/max*100);
+      const dow=cur.getDay();
+      const col=document.createElement("div");
+      col.className="lbar-col"+(ds===today?" today":"")+(dow===0?" sun":"")+(dow===6?" sat":"");
+      col.innerHTML='<div class="lbar-track"><div class="lbar-fill" style="height:'+h+'%"></div></div>'
+        +'<div class="lbar-day">'+(ledMode==="week"?WD[dow]:cur.getDate())+'</div>';
+      if(v>0) col.title=won(v);
+      col.onclick=(function(d){ return ()=>jumpToDay(d); })(ds);
+      frag.appendChild(col);
+      cur.setDate(cur.getDate()+1);
+    }
+    box.appendChild(frag);
+    box.classList.toggle("dense", ledMode==="month");
+  }
+
+  function renderLedCats(catSum,total){
+    const box=document.getElementById("ledCats"); box.innerHTML="";
+    const arr=Object.keys(catSum).map(c=>({cat:c,val:catSum[c]})).sort((a,b)=>b.val-a.val);
+    if(!arr.length){ box.innerHTML='<div class="kempty">아직 지출 내역이 없어요.</div>'; return; }
+    const frag=document.createDocumentFragment();
+    arr.forEach(it=>{
+      const pct=total>0?Math.round(it.val/total*100):0;
+      const col=CAT_COLORS[it.cat]||CAT_COLORS["기타"];
+      const row=document.createElement("div"); row.className="lcat";
+      row.innerHTML='<div class="lcat-top"><span class="lcat-dot" style="background:'+col+'"></span>'
+        +'<span class="lcat-name"></span>'
+        +'<span class="lcat-pct">'+pct+'%</span>'
+        +'<span class="lcat-val">'+won(it.val)+'</span></div>'
+        +'<div class="lcat-track"><div class="lcat-fill" style="width:'+pct+'%;background:'+col+'"></div></div>';
+      row.querySelector(".lcat-name").textContent=it.cat;
+      frag.appendChild(row);
+    });
+    box.appendChild(frag);
+  }
+
+  function renderLedList(items){
+    const box=document.getElementById("ledList"); box.innerHTML="";
+    if(!items.length){ box.innerHTML='<div class="kempty">이 기간 가계부 내역이 없어요.</div>'; return; }
+    const byDate={};
+    items.forEach(it=>{ (byDate[it.date]=byDate[it.date]||[]).push(it); });
+    const dates=Object.keys(byDate).sort((a,b)=> a<b?1:-1);   // 최신 날짜 먼저
+    const frag=document.createDocumentFragment();
+    dates.forEach(ds=>{
+      const d=parseYmd(ds);
+      const head=document.createElement("div"); head.className="lday-h";
+      head.textContent=(d.getMonth()+1)+"월 "+d.getDate()+"일 "+WD[d.getDay()];
+      head.onclick=(function(x){ return ()=>jumpToDay(x); })(ds);
+      frag.appendChild(head);
+      byDate[ds].sort((a,b)=>b.amount-a.amount).forEach(it=>{
+        const isInc=it.kind==="inc";
+        const cat=isInc?"수입":catOf(it.label);
+        const col=isInc?"var(--keep)":(CAT_COLORS[cat]||CAT_COLORS["기타"]);
+        const row=document.createElement("div"); row.className="lrow";
+        row.innerHTML='<span class="lrow-cat" style="color:'+col+'">'+cat+'</span>'
+          +'<span class="lrow-lab"></span>'
+          +'<span class="lrow-amt '+(isInc?"pos":"neg")+'">'+(isInc?"＋":"－")+won(it.amount)+'</span>';
+        row.querySelector(".lrow-lab").textContent=it.label;
+        frag.appendChild(row);
+      });
+    });
+    box.appendChild(frag);
+  }
+
+  function setLedMode(m){ ledMode=m;
+    document.getElementById("ledWeek").setAttribute("aria-selected",m==="week");
+    document.getElementById("ledMonth").setAttribute("aria-selected",m==="month");
+    renderLedger();
+  }
+  document.getElementById("ledWeek").onclick=()=>setLedMode("week");
+  document.getElementById("ledMonth").onclick=()=>setLedMode("month");
+  document.getElementById("ledPrev").onclick=()=>{ if(ledMode==="week")ledAnchor.setDate(ledAnchor.getDate()-7); else ledAnchor.setMonth(ledAnchor.getMonth()-1); renderLedger(); };
+  document.getElementById("ledNext").onclick=()=>{ if(ledMode==="week")ledAnchor.setDate(ledAnchor.getDate()+7); else ledAnchor.setMonth(ledAnchor.getMonth()+1); renderLedger(); };
 
   /* ===================== REMINDER ===================== */
   const remToggle=document.getElementById("remToggle"), remTime=document.getElementById("remTime"),

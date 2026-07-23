@@ -526,7 +526,68 @@
   /* bar 자체 border-bottom 제거 → datenav 선만 남김 */
   body:has(#view-record.active) .bar{ border-bottom:none; }
 
-  /* 회고 탭 흰색 배경 */
-  body:has(#view-review.active) main{ background:var(--bg); }
+  /* 회고·가계부 탭 흰색 배경 */
+  body:has(#view-review.active) main,
+  body:has(#view-ledger.active) main{ background:var(--bg); }
+
+  /* 가계부 PC: 요약 카드 4열 유지, 본문 여백 */
+  #view-ledger .pad{ padding:22px 26px 40px; }
+  #view-ledger .led-bars{ max-width:640px; }
 
 }
+
+/* ================= 가계부(LEDGER) 탭 ================= */
+.led-summary{ margin:4px 0 22px; }
+.led-hero{ border-radius:16px; padding:16px 18px; margin-bottom:10px; border:1px solid var(--line);
+  background:var(--soft); }
+.led-hero.pos{ background:linear-gradient(180deg,#eef8f1,#f7fcf9); border-color:#cfe9d9; }
+.led-hero.neg{ background:linear-gradient(180deg,#fdefec,#fdf7f5); border-color:#f2d3ca; }
+.led-hero .lh-lab{ font-size:12.5px; color:var(--cap); font-weight:600; }
+.led-hero .lh-lab span{ color:var(--faint); font-weight:500; }
+.led-hero .lh-num{ font-size:28px; font-weight:800; letter-spacing:-.02em; margin-top:4px; line-height:1.1; }
+.led-hero.pos .lh-num{ color:var(--keep); }
+.led-hero.neg .lh-num{ color:var(--prob); }
+
+.led-block{ margin:0 0 22px; }
+.led-h{ font-size:13px; font-weight:700; color:var(--ink); margin:0 0 12px;
+  display:flex; align-items:baseline; gap:8px; }
+.led-h .led-hint{ font-size:11px; font-weight:500; color:var(--faint); }
+
+/* 일별 지출 막대 */
+.led-bars{ display:flex; align-items:flex-end; gap:6px; height:120px; padding:4px 2px 0; }
+.led-bars.dense{ gap:2px; }
+.lbar-col{ flex:1 1 0; display:flex; flex-direction:column; align-items:center; gap:6px;
+  height:100%; cursor:pointer; min-width:0; }
+.lbar-track{ flex:1; width:100%; max-width:26px; display:flex; align-items:flex-end;
+  background:var(--track); border-radius:6px 6px 4px 4px; overflow:hidden; }
+.lbar-fill{ width:100%; background:var(--prob); border-radius:6px 6px 0 0; min-height:2px;
+  transition:height .25s ease; opacity:.85; }
+.lbar-col.today .lbar-fill{ opacity:1; box-shadow:inset 0 0 0 2px var(--indigo); }
+.lbar-day{ font-size:10.5px; color:var(--cap); font-weight:600; white-space:nowrap; }
+.led-bars.dense .lbar-day{ font-size:9px; }
+.lbar-col.sun .lbar-day{ color:var(--prob); }
+.lbar-col.sat .lbar-day{ color:var(--try); }
+.lbar-col:hover .lbar-fill{ opacity:1; }
+
+/* 카테고리별 지출 */
+.lcat{ padding:9px 0; }
+.lcat-top{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.lcat-dot{ width:9px; height:9px; border-radius:999px; flex:none; }
+.lcat-name{ font-size:13.5px; color:var(--ink); font-weight:600; }
+.lcat-pct{ font-size:12px; color:var(--faint); font-weight:600; margin-left:auto; }
+.lcat-val{ font-size:13.5px; color:var(--sub); font-weight:700; min-width:74px; text-align:right; }
+.lcat-track{ height:7px; background:var(--track); border-radius:999px; overflow:hidden; }
+.lcat-fill{ height:100%; border-radius:999px; transition:width .3s ease; }
+
+/* 전체 내역 */
+.lday-h{ font-size:12px; font-weight:700; color:var(--indigo-text); background:var(--indigo-soft);
+  padding:7px 10px; border-radius:8px; margin:14px 0 4px; cursor:pointer; }
+.lday-h:first-child{ margin-top:0; }
+.lrow{ display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--line3); }
+.lrow:last-child{ border-bottom:none; }
+.lrow-cat{ font-size:11px; font-weight:700; flex:none; min-width:56px; }
+.lrow-lab{ font-size:13.5px; color:var(--ink); flex:1; min-width:0; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; }
+.lrow-amt{ font-size:13.5px; font-weight:700; flex:none; }
+.lrow-amt.pos{ color:var(--keep); }
+.lrow-amt.neg{ color:var(--prob); }
