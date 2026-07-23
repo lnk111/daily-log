@@ -320,10 +320,22 @@
     const span=ledMode==="week"?7:r.end.getDate();
     document.getElementById("ledStat").innerHTML="이 기간 <b>"+daysRec+"</b>일 기록 · 총 "+span+"일";
 
+    const up=net>=0;
+    const trendSvg=up
+      ? '<svg class="lh-trend up" viewBox="0 0 48 28" width="48" height="28" fill="none" aria-hidden="true">'
+        +'<path d="M2 24 L14 16 L26 19 L46 4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'
+        +'<path d="M38 4 L46 4 L46 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      : '<svg class="lh-trend down" viewBox="0 0 48 28" width="48" height="28" fill="none" aria-hidden="true">'
+        +'<path d="M2 4 L14 12 L26 9 L46 24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'
+        +'<path d="M38 24 L46 24 L46 16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     document.getElementById("ledSummary").innerHTML=
-      '<div class="led-hero '+(net>=0?"pos":"neg")+'">'
+      '<div class="led-hero '+(up?"pos":"neg")+'">'
+      +'<div class="lh-main">'
       +'<div class="lh-lab">이 기간 순저축 <span>수입 − 지출</span></div>'
-      +'<div class="lh-num">'+(net>=0?"＋":"－")+won(Math.abs(net))+'</div></div>'
+      +'<div class="lh-num">'+won(Math.abs(net))+'</div>'
+      +'</div>'
+      +trendSvg
+      +'</div>'
       +'<div class="fin-cards4">'
       +revFinCard("수입",inc)+revFinCard("지출",exp)+revFinCard("투자 매수",buy)+revFinCard("적금",sav)
       +'</div>';
