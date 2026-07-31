@@ -230,6 +230,7 @@
             <button id="ledMonth" role="tab" aria-selected="true">월간</button>
           </div>
           <div class="cal-nav">
+            <button class="report-btn" id="ledReportBtn" aria-label="이 달 리포트">📄 리포트</button>
             <button class="icon-btn" id="ledPrev" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
             <button class="icon-btn" id="ledNext" aria-label="다음"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
           </div>
@@ -319,6 +320,19 @@
     <span>회고</span>
   </button>
 </nav>
+
+<!-- 월간 리포트 오버레이 -->
+<div class="report-view" id="reportView" hidden>
+  <div class="report-top">
+    <div>
+      <div class="report-badge">MONTHLY REPORT</div>
+      <div class="report-title" id="reportTitle">—</div>
+      <div class="report-sub" id="reportSub"></div>
+    </div>
+    <button class="report-close" id="reportClose" aria-label="닫기">✕</button>
+  </div>
+  <div class="report-body" id="reportBody"></div>
+</div>
 
 <script src="app.js"></script>
 </body>

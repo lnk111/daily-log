@@ -517,6 +517,168 @@
   document.getElementById("ledPrev").onclick=()=>{ if(ledMode==="week")ledAnchor.setDate(ledAnchor.getDate()-7); else ledAnchor.setMonth(ledAnchor.getMonth()-1); renderLedger(); };
   document.getElementById("ledNext").onclick=()=>{ if(ledMode==="week")ledAnchor.setDate(ledAnchor.getDate()+7); else ledAnchor.setMonth(ledAnchor.getMonth()+1); renderLedger(); };
 
+  /* ===================== 월간 리포트 ===================== */
+  const FIXED_CATS=new Set(["주거·통신"]);   // 고정비로 분류할 지출 카테고리
+  function manW(n){ return Math.round(n/10000).toLocaleString("ko-KR")+"만"; }
+  // 선택 기간 집계
+  function aggPeriod(r){
+    let inc=0,exp=0,buy=0,sav=0,daysRec=0; const incCat={},expCat={};
+    const cur=new Date(r.start);
+    while(cur<=r.end){
+      const f=(entries[ymd(cur)]||{}).fin;
+      if(f){
+        if(finHasContent(f)) daysRec++;
+        (f.inc||[]).forEach(x=>{ const a=+x.amount||0; if(!a)return; inc+=a; const c=incCatOf(x.label); incCat[c]=(incCat[c]||0)+a; });
+        (f.exp||[]).forEach(x=>{ const a=+x.amount||0; if(!a)return; exp+=a; const c=catOf(x.label); expCat[c]=(expCat[c]||0)+a; });
+        buy+=finSum(f.buy); sav+=finSum(f.sav);
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+    return {inc,exp,buy,sav,daysRec,incCat,expCat};
+  }
+  // 상위 n개 + 나머지 '기타'로 합치기 → [{label,val,color}]
+  function topWithRest(catObj,colors,n,restLabel){
+    const arr=Object.keys(catObj).map(c=>({label:c,val:catObj[c]})).filter(o=>o.val>0).sort((a,b)=>b.val-a.val);
+    const head=arr.slice(0,n), rest=arr.slice(n);
+    const out=head.map(o=>({label:o.label,val:o.val,color:colors[o.label]||colors["기타"]||"#a1a1aa"}));
+    const restSum=rest.reduce((s,o)=>s+o.val,0);
+    if(restSum>0) out.push({label:restLabel,val:restSum,color:colors["기타"]||"#a1a1aa"});
+    return out;
+  }
+  // 가로형 산키 SVG (금액=높이, 좌→우 흐름 · 한 화면에 맞춤)
+  const SK_W=12;   // 노드 막대 두께
+  function buildSankeySVG(a){
+    const inc=a.inc, exp=a.exp, net=Math.max(0,inc-exp);
+    if(inc<=0) return '<div class="kempty">이 달 수입 내역이 없어요.</div>';
+    // 컬럼 데이터
+    const income=topWithRest(a.incCat,INC_CAT_COLORS,4,"기타 수입");
+    const T={label:"총수입",val:inc,color:"#4f5bd5"};
+    const SAV={label:"순저축",val:net,color:"#2f9e69"};
+    const EXP={label:"지출",val:exp,color:"#d9694f"};
+    const expLeaves=topWithRest(a.expCat,CAT_COLORS,3,"기타 지출");
+    // 순저축 하위 = 투자/적금/현금 (높이 합은 net에 맞춤; 초과 시 축소, 라벨은 실제값)
+    let savLeaves=[], savOverflow=false;
+    if(net>0){
+      const raw=[{label:"투자 매수",val:a.buy,color:"#2f9e69"},{label:"적금",val:a.sav,color:"#57b98a"}].filter(o=>o.val>0);
+      const sumSav=raw.reduce((s,o)=>s+o.val,0);
+      if(sumSav<=net){ savLeaves=raw.map(o=>({...o,h:o.val})); const cash=net-sumSav; if(cash>0) savLeaves.push({label:"남은 현금",val:cash,color:"#9bd3b5",h:cash}); }
+      else { savOverflow=true; const k=net/sumSav; savLeaves=raw.map(o=>({...o,h:o.val*k})); }
+    }
+    expLeaves.forEach(o=>{ o.h=o.val; });          // 레이아웃 대상과 리본 대상이 같은 객체여야 함
+    const leaves=savLeaves.concat(expLeaves);
+    // 레이아웃 (좌→우 4컬럼 · 화면 너비에 맞춤)
+    const W=560, H=380, Cy=190, gap=7;
+    const sy=(H-36-5*gap)/inc;                 // 잎 최대 6노드 기준 세로 스케일
+    const colX=[104,238,372,456];
+    const cols=[income,[T],[SAV,EXP],leaves];
+    cols.forEach((col,ci)=>{
+      const span=col.reduce((s,n)=>s+val(n)*sy,0)+(col.length-1)*gap;
+      let y=Cy-span/2;
+      col.forEach(n=>{ n.x=colX[ci]; n.hpx=val(n)*sy; n.y=y; n.outY=y; n.inY=y; y+=n.hpx+gap; });
+    });
+    function val(n){ return n.h!=null?n.h:n.val; }
+    let rib="",nod="",lab="";
+    income.forEach(s=>{ rib+=skRibbon(s,T,s.val*sy,"#97a1b2",0.32); });
+    rib+=skRibbon(T,SAV,net*sy,"#2f9e69",0.30);
+    rib+=skRibbon(T,EXP,exp*sy,"#d9694f",0.30);
+    savLeaves.forEach(l=>{ rib+=skRibbon(SAV,l,l.hpx,l.color,0.42); });
+    expLeaves.forEach(l=>{ rib+=skRibbon(EXP,l,l.hpx,l.color,0.42); });
+    [].concat(income,[T,SAV,EXP],leaves).forEach(n=>{ nod+=skBar(n); });
+    // 라벨: 수입원(왼쪽) · 총수입/순저축/지출(가운데 위) · 잎(오른쪽)
+    income.forEach(n=>{ lab+=skSide(n.x-9,n.y+n.hpx/2,"end",n.label,manW(n.val)+"원"); });
+    lab+=skTxt(T.x+SK_W/2,T.y-8,"middle","총수입","var(--ink)",13);
+    lab+=skTxt(T.x+SK_W/2,T.y+T.hpx+16,"middle",manW(inc)+"원","var(--sub)",11.5);
+    lab+=skTxt(SAV.x+SK_W/2,SAV.y-7,"middle","순저축 "+manW(net)+"원","#2f9e69",11.5);
+    lab+=skTxt(EXP.x+SK_W/2,EXP.y-7,"middle","지출 "+manW(exp)+"원","#d9694f",11.5);
+    leaves.forEach(n=>{ lab+=skSide(n.x+SK_W+9,n.y+n.hpx/2,"start",n.label,manW(n.val)+"원"); });
+    const svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="자금 흐름 산키">'+rib+nod+lab+'</svg>';
+    const note=savOverflow?'<div class="rpt-note">* 투자·적금 합계가 순저축을 초과 — 일부는 기존 자산에서 나갔어요.</div>':'';
+    return svg+note;
+  }
+  function skRibbon(s,t,th,color,op){
+    const x0=s.x+SK_W, x1=t.x, y0=s.outY, y1=t.inY, xm=(x0+x1)/2;
+    s.outY+=th; t.inY+=th;
+    return '<path d="M'+x0+','+y0.toFixed(1)+' C'+xm+','+y0.toFixed(1)+' '+xm+','+y1.toFixed(1)+' '+x1+','+y1.toFixed(1)
+      +' L'+x1+','+(y1+th).toFixed(1)+' C'+xm+','+(y1+th).toFixed(1)+' '+xm+','+(y0+th).toFixed(1)+' '+x0+','+(y0+th).toFixed(1)+' Z" fill="'+color+'" opacity="'+op+'"/>';
+  }
+  function skBar(n){
+    return '<rect x="'+n.x+'" y="'+n.y.toFixed(1)+'" width="'+SK_W+'" height="'+Math.max(2,n.hpx).toFixed(1)+'" rx="3" fill="'+n.color+'"><title>'+esc(n.label+" "+won(n.val))+'</title></rect>';
+  }
+  function skSide(x,cy,anchor,name,amt){
+    return '<text x="'+x.toFixed(1)+'" y="'+(cy-2).toFixed(1)+'" text-anchor="'+anchor+'" font-size="12" font-weight="700" fill="var(--ink)" font-family="Pretendard,sans-serif">'+esc(name)+'</text>'
+      +'<text x="'+x.toFixed(1)+'" y="'+(cy+11).toFixed(1)+'" text-anchor="'+anchor+'" font-size="10.5" fill="var(--sub)" font-family="Pretendard,sans-serif">'+esc(amt)+'</text>';
+  }
+  function skTxt(x,y,anchor,t,fill,size){
+    return '<text x="'+x.toFixed(1)+'" y="'+y+'" text-anchor="'+anchor+'" font-size="'+size+'" font-weight="700" fill="'+fill+'" font-family="Pretendard,sans-serif">'+esc(t)+'</text>';
+  }
+  // 수입/지출 분석용 항목 바 리스트
+  function rptBreak(list,total){
+    if(!list.length) return '<div class="kempty">내역이 없어요.</div>';
+    const max=list[0].val;
+    return list.map(it=>{ const pct=total>0?Math.round(it.val/total*100):0; const w=max>0?Math.round(it.val/max*100):0;
+      return '<div class="lcat"><div class="lcat-top"><span class="lcat-dot" style="background:'+it.color+'"></span>'
+        +'<span class="lcat-name">'+esc(it.label)+'</span><span class="lcat-pct">'+pct+'%</span>'
+        +'<span class="lcat-val">'+won(it.val)+'</span></div>'
+        +'<div class="lcat-track"><div class="lcat-fill" style="width:'+w+'%;background:'+it.color+'"></div></div></div>';
+    }).join("");
+  }
+  function renderMonthReport(){
+    const r=ledRange(), a=aggPeriod(r);
+    const net=a.inc-a.exp;
+    const rate=a.inc>0?Math.round(net/a.inc*1000)/10:0;
+    const span=ledMode==="week"?7:r.end.getDate();
+    const avg=span>0?Math.round(a.exp/span):0;
+    document.getElementById("reportTitle").textContent=ledLabel(r)+" 결산";
+    document.getElementById("reportSub").textContent="이 기간 "+a.daysRec+"일 기록 · 총 "+span+"일 · 자동 생성";
+    const incAll=Object.keys(a.incCat).map(c=>({label:c,val:a.incCat[c],color:INC_CAT_COLORS[c]||INC_CAT_COLORS["기타"]})).sort((x,y)=>y.val-x.val);
+    const expAll=Object.keys(a.expCat).map(c=>({label:c,val:a.expCat[c],color:CAT_COLORS[c]||CAT_COLORS["기타"]})).sort((x,y)=>y.val-x.val);
+    let fixed=0; for(const c in a.expCat) if(FIXED_CATS.has(c)) fixed+=a.expCat[c];
+    const variable=a.exp-fixed;
+    const pctOf=(v,t)=>t>0?Math.round(v/t*100):0;
+    const html=
+      // 산키
+      '<section class="rpt-sec"><div class="rpt-h"><span class="rpt-n">🌊</span>자금 흐름<small>금액 = 너비</small></div>'
+        +'<div class="rpt-sankey">'+buildSankeySVG(a)+'</div>'
+        +'<div class="rpt-legend">'+incAll.slice(0,6).map(o=>'<span class="rpt-lg"><i style="background:'+o.color+'"></i>'+esc(o.label)+'</span>').join("")+'</div></section>'
+      // ① 핵심 지표
+      +'<section class="rpt-sec"><div class="rpt-h"><span class="rpt-n">1</span>핵심 지표</div>'
+        +'<div class="rpt-kpis">'
+        +'<div class="rpt-kpi hero"><div class="kl">순저축 · 수입 − 지출</div><div class="kv '+(net>=0?"pos":"neg")+'">'+(net>=0?"＋":"－")+won(Math.abs(net))+'</div></div>'
+        +'<div class="rpt-kpi"><div class="kl">저축률</div><div class="kv">'+rate+'%</div></div>'
+        +'<div class="rpt-kpi"><div class="kl">일평균 지출</div><div class="kv">'+won(avg)+'</div></div>'
+        +'<div class="rpt-kpi"><div class="kl">총수입</div><div class="kv">'+won(a.inc)+'</div></div>'
+        +'<div class="rpt-kpi"><div class="kl">총지출</div><div class="kv">'+won(a.exp)+'</div></div>'
+        +'</div></section>'
+      // ② 손익 개요
+      +'<section class="rpt-sec"><div class="rpt-h"><span class="rpt-n">2</span>손익 개요<small>수입 → 지출 → 순저축</small></div>'
+        +plRow("총수입",a.inc,a.inc,"#2f9e69","")
+        +plRow("총지출",a.exp,a.inc,"#d9694f","−")
+        +plRow("순저축",Math.max(0,net),a.inc,"#4f5bd5","")
+        +'</section>'
+      // ③ 수입 분석
+      +'<section class="rpt-sec"><div class="rpt-h"><span class="rpt-n">3</span>수입 분석<small>수입원 자동 분류</small></div>'
+        +rptBreak(incAll,a.inc)+'</section>'
+      // ④ 지출 분석
+      +'<section class="rpt-sec"><div class="rpt-h"><span class="rpt-n">4</span>지출 분석<small>내용으로 자동 분류</small></div>'
+        +rptBreak(expAll,a.exp)
+        +'<div class="rpt-fv"><div class="rpt-fvc"><div class="l">고정비</div><div class="v" style="color:#3f7cc0">'+won(fixed)+'</div><div class="p">'+pctOf(fixed,a.exp)+'%</div></div>'
+        +'<div class="rpt-fvc"><div class="l">변동비</div><div class="v" style="color:#d9694f">'+won(variable)+'</div><div class="p">'+pctOf(variable,a.exp)+'%</div></div></div></section>'
+      // 투자·적금 배분
+      +'<section class="rpt-sec"><div class="rpt-h"><span class="rpt-n">＋</span>투자·적금 배분<small>이 달 자산 형성</small></div>'
+        +'<div class="rpt-fv"><div class="rpt-fvc"><div class="l">투자 매수</div><div class="v" style="color:#2f9e69">'+won(a.buy)+'</div><div class="p">'+pctOf(a.buy,a.buy+a.sav)+'%</div></div>'
+        +'<div class="rpt-fvc"><div class="l">적금</div><div class="v" style="color:#57b98a">'+won(a.sav)+'</div><div class="p">'+pctOf(a.sav,a.buy+a.sav)+'%</div></div></div></section>';
+    document.getElementById("reportBody").innerHTML=html;
+  }
+  function plRow(name,val,total,color,sign){
+    const w=total>0?Math.round(val/total*100):0;
+    return '<div class="rpt-pl"><div class="rpt-pltop"><span>'+name+'</span><span style="color:'+color+'">'+sign+won(val)+'</span></div>'
+      +'<div class="rpt-plbar"><div style="width:'+w+'%;background:'+color+'"></div></div></div>';
+  }
+  function openReport(){ renderMonthReport(); const v=document.getElementById("reportView"); v.hidden=false; v.scrollTop=0; document.body.style.overflow="hidden"; }
+  function closeReport(){ document.getElementById("reportView").hidden=true; document.body.style.overflow=""; }
+  document.getElementById("ledReportBtn").onclick=openReport;
+  document.getElementById("reportClose").onclick=closeReport;
+
   /* ===================== REMINDER ===================== */
   const remToggle=document.getElementById("remToggle"), remTime=document.getElementById("remTime"),
         remNote=document.getElementById("remNote"), bell=document.getElementById("bell");
