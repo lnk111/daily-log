@@ -616,6 +616,7 @@
   padding:7px 12px; margin-right:2px; white-space:nowrap; transition:opacity .15s ease; }
 .report-btn:hover{ opacity:.9; }
 .report-view{ position:fixed; inset:0; z-index:200; background:var(--bg); display:flex; flex-direction:column; }
+.report-view[hidden]{ display:none; }
 .report-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
   padding:16px 18px 12px; border-bottom:1px solid var(--line); }
 .report-badge{ font-size:10px; font-weight:800; letter-spacing:.13em; color:var(--indigo-text); }
