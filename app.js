@@ -638,6 +638,11 @@
   function won(n){ return Math.round(n||0).toLocaleString("ko-KR")+"원"; }
   function num(n){ return Math.round(n||0).toLocaleString("ko-KR"); }
   function parseAmt(s){ return Math.round(Math.abs(parseFloat(String(s).replace(/[^0-9.]/g,""))||0)); }
+  // 금액 입력칸: 타이핑 중 천 단위 콤마 표기 (1709000 → 1,709,000). 저장은 parseAmt가 콤마를 걸러냄.
+  function commafyInput(inp){
+    const digits=(inp.value||"").replace(/[^0-9]/g,"");
+    inp.value=digits?Number(digits).toLocaleString("ko-KR"):"";
+  }
   function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
   const isDate=(d)=>/^\d{4}-\d{2}-\d{2}$/.test(d);
 
@@ -839,6 +844,7 @@
   }
   gid("sheetAdd").addEventListener("mousedown",e=>e.preventDefault());   // 버튼이 포커스를 안 뺏게 → 한글 유지
   gid("sheetAdd").onclick=sheetAddFn;
+  gid("sheetAmt").addEventListener("input",e=>commafyInput(e.target));
   gid("sheetAmt").addEventListener("keydown",e=>{ if(e.key==="Enter") sheetAddFn(); });
   gid("sheetLabel").addEventListener("keydown",e=>{ if(e.key==="Enter") gid("sheetAmt").focus(); });
   setSheetKind("exp");
@@ -850,6 +856,7 @@
     const ym=current.slice(0,7); const acct=acctList[+inp.dataset.i]; if(!acct) return;
     if(!allocs[ym]||typeof allocs[ym]!=="object") allocs[ym]={};
     const v=parseAmt(inp.value);
+    commafyInput(inp);
     if(v) allocs[ym][acct]=v; else delete allocs[ym][acct];
     refreshNumbers();
     clearTimeout(allocTimer); allocTimer=setTimeout(persistAllocs,600);
