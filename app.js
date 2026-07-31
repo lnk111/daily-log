@@ -295,12 +295,32 @@
   }
   const CAT_COLORS={ "식비":"#d9694f","교통":"#3f7cc0","주거·통신":"#5b5bd6","생활":"#8C7459","건강":"#2f9e69","문화·여가":"#c05fa8","쇼핑":"#d98a2b","경조사":"#7a8a99","기타":"#a1a1aa" };
 
+  // 수입원 자동 분류 (N잡러용) — 더 구체적인 규칙을 앞에 두어 먼저 매칭시킴
+  const INC_CAT_RULES=[
+    {cat:"애드센스",  kw:["애드센스","adsense","애드핏","구글광고","구글 광고"]},
+    {cat:"협찬",      kw:["협찬","스폰서","ppl","광고비","제품제공","브랜디드"]},
+    {cat:"블로그 광고",kw:["블로그광고","블로그 광고","체험단","원고료","포스팅비","기자단"]},
+    {cat:"블로그",    kw:["블로그","포스팅","네이버 블로그","티스토리","브런치"]},
+    {cat:"유튜브",    kw:["유튜브","youtube","슈퍼챗","멤버십","쇼츠","조회수 수익"]},
+    {cat:"배달",      kw:["배달","배민","배달의민족","쿠팡이츠","쿠팡플렉스","라이더","배달대행","딜리버리","요기요"]},
+    {cat:"부업",      kw:["부업","사이드","스마트스토어","스토어","셀러","중고판매","당근","번개장터","외주","프리랜스","용역","강의","과외"]},
+    {cat:"월급",      kw:["월급","급여","봉급","상여","보너스","성과급","연봉","본업","페이","임금","salary"]}
+  ];
+  function incCatOf(label){
+    const s=String(label||"").toLowerCase();
+    for(const r of INC_CAT_RULES){ for(const k of r.kw){ if(s.indexOf(k.toLowerCase())>=0) return r.cat; } }
+    return "기타";
+  }
+  const INC_CAT_COLORS={ "월급":"#2f9e69","부업":"#3f7cc0","배달":"#d98a2b","유튜브":"#d9694f","블로그":"#5b5bd6","블로그 광고":"#9b6dd6","협찬":"#c05fa8","애드센스":"#14b8a6","기타":"#a1a1aa" };
+  const INC_ORDER=["월급","부업","배달","유튜브","협찬","애드센스","블로그 광고","블로그","기타"];   // 스택 쌓는 순서(아래→위)
+
   function renderLedger(){
     const r=ledRange();
     document.getElementById("ledTitle").textContent=ledLabel(r);
     let inc=0,exp=0,buy=0,sav=0, daysRec=0;
     const dayExp={};      // ds -> 지출 합계
     const catSum={};      // cat -> 지출 합계
+    const incCatSum={};   // cat -> 수입원별 합계
     const items=[];       // {date,kind,label,amount}
     const cur=new Date(r.start);
     while(cur<=r.end){
@@ -310,7 +330,7 @@
         inc+=finSum(f.inc); exp+=finSum(f.exp); buy+=finSum(f.buy); sav+=finSum(f.sav);
         dEx=finSum(f.exp);
         if(finHasContent(f)) daysRec++;
-        (f.inc||[]).forEach(x=>items.push({date:ds,kind:"inc",label:x.label||"수입",amount:+x.amount||0}));
+        (f.inc||[]).forEach(x=>{ const a=+x.amount||0; items.push({date:ds,kind:"inc",label:x.label||"수입",amount:a}); const ic=incCatOf(x.label); incCatSum[ic]=(incCatSum[ic]||0)+a; });
         (f.exp||[]).forEach(x=>{ const a=+x.amount||0; items.push({date:ds,kind:"exp",label:x.label||"지출",amount:a}); const c=catOf(x.label); catSum[c]=(catSum[c]||0)+a; });
       }
       dayExp[ds]=dEx;
@@ -340,8 +360,10 @@
       +revFinCard("수입",inc)+revFinCard("지출",exp)+revFinCard("투자 매수",buy)+revFinCard("적금",sav)
       +'</div>';
 
+    renderIncTrend();
     renderLedBars(r,dayExp);
-    renderLedCats(catSum,exp);
+    renderCatBreakdown("ledIncCats",incCatSum,inc,INC_CAT_COLORS,"아직 수입 내역이 없어요.");
+    renderCatBreakdown("ledCats",catSum,exp,CAT_COLORS,"아직 지출 내역이 없어요.");
     renderLedList(items);
   }
 
@@ -370,14 +392,14 @@
     box.classList.toggle("dense", ledMode==="month");
   }
 
-  function renderLedCats(catSum,total){
-    const box=document.getElementById("ledCats"); box.innerHTML="";
+  function renderCatBreakdown(boxId,catSum,total,colors,emptyMsg){
+    const box=document.getElementById(boxId); box.innerHTML="";
     const arr=Object.keys(catSum).map(c=>({cat:c,val:catSum[c]})).sort((a,b)=>b.val-a.val);
-    if(!arr.length){ box.innerHTML='<div class="kempty">아직 지출 내역이 없어요.</div>'; return; }
+    if(!arr.length){ box.innerHTML='<div class="kempty">'+emptyMsg+'</div>'; return; }
     const frag=document.createDocumentFragment();
     arr.forEach(it=>{
       const pct=total>0?Math.round(it.val/total*100):0;
-      const col=CAT_COLORS[it.cat]||CAT_COLORS["기타"];
+      const col=colors[it.cat]||colors["기타"]||"#a1a1aa";
       const row=document.createElement("div"); row.className="lcat";
       row.innerHTML='<div class="lcat-top"><span class="lcat-dot" style="background:'+col+'"></span>'
         +'<span class="lcat-name"></span>'
@@ -388,6 +410,73 @@
       frag.appendChild(row);
     });
     box.appendChild(frag);
+  }
+
+  // 최근 N개 기간(월간=6개월 / 주간=8주)의 시작·끝·라벨 배열. 현재 기간이 마지막.
+  function incTrendPeriods(){
+    const periods=[];
+    if(ledMode==="week"){
+      const base=new Date(ledAnchor); base.setDate(base.getDate()-base.getDay()); base.setHours(0,0,0,0);
+      for(let i=7;i>=0;i--){
+        const s=new Date(base); s.setDate(s.getDate()-i*7);
+        const e=new Date(s); e.setDate(e.getDate()+6);
+        periods.push({start:s,end:e,label:(s.getMonth()+1)+"/"+s.getDate()});
+      }
+    } else {
+      const y=ledAnchor.getFullYear(), m=ledAnchor.getMonth();
+      for(let i=5;i>=0;i--){
+        const s=new Date(y,m-i,1), e=new Date(y,m-i+1,0);
+        periods.push({start:s,end:e,label:(s.getMonth()+1)+"월"});
+      }
+    }
+    return periods;
+  }
+  // 한 기간의 수입원별 합계 + 총합
+  function incByCat(start,end){
+    const byCat={}; let total=0; const cur=new Date(start);
+    while(cur<=end){
+      const f=(entries[ymd(cur)]||{}).fin;
+      if(f&&f.inc) f.inc.forEach(x=>{ const a=+x.amount||0; if(!a)return; const c=incCatOf(x.label); byCat[c]=(byCat[c]||0)+a; total+=a; });
+      cur.setDate(cur.getDate()+1);
+    }
+    return {byCat,total};
+  }
+  function renderIncTrend(){
+    const box=document.getElementById("ledIncTrend"); if(!box) return; box.innerHTML="";
+    const hint=document.getElementById("ledIncTrendHint");
+    if(hint) hint.textContent=ledMode==="week"?"최근 8주":"최근 6개월";
+    const rows=incTrendPeriods().map(p=>({label:p.label,...incByCat(p.start,p.end)}));
+    if(rows.every(r=>r.total===0)){ box.innerHTML='<div class="kempty">아직 수입 추이가 없어요.</div>'; return; }
+    const maxT=Math.max(1,...rows.map(r=>r.total));
+    const H=150;
+    const chart=document.createElement("div"); chart.className="inc-trend";
+    rows.forEach((r,i)=>{
+      const col=document.createElement("div"); col.className="itr-col";
+      const stack=document.createElement("div"); stack.className="itr-stack";
+      stack.style.height=Math.max(3,r.total/maxT*H)+"px";
+      INC_ORDER.forEach(src=>{ const v=r.byCat[src]||0; if(!v||r.total<=0) return;
+        const seg=document.createElement("div"); seg.className="itr-seg";
+        seg.style.height=(v/r.total*100)+"%"; seg.style.background=INC_CAT_COLORS[src];
+        seg.title=src+" "+won(v); stack.appendChild(seg);
+      });
+      col.appendChild(stack);
+      const lab=document.createElement("div"); lab.className="itr-lab"+(i===rows.length-1?" cur":"");
+      lab.textContent=r.label; col.appendChild(lab);
+      col.title=r.label+" 수입 "+won(r.total);
+      chart.appendChild(col);
+    });
+    box.appendChild(chart);
+    // 범례 — 전체 기간 합산 큰 순서
+    const grand={}; rows.forEach(r=>{ for(const c in r.byCat) grand[c]=(grand[c]||0)+r.byCat[c]; });
+    const cats=Object.keys(grand).sort((a,b)=>grand[b]-grand[a]);
+    if(cats.length){
+      const lg=document.createElement("div"); lg.className="inc-legend";
+      cats.forEach(c=>{ const el=document.createElement("span"); el.className="inc-lg";
+        el.innerHTML='<span class="inc-lg-dot" style="background:'+(INC_CAT_COLORS[c]||INC_CAT_COLORS["기타"])+'"></span>';
+        el.appendChild(document.createTextNode(c)); lg.appendChild(el);
+      });
+      box.appendChild(lg);
+    }
   }
 
   function renderLedList(items){
@@ -405,8 +494,8 @@
       frag.appendChild(head);
       byDate[ds].sort((a,b)=>b.amount-a.amount).forEach(it=>{
         const isInc=it.kind==="inc";
-        const cat=isInc?"수입":catOf(it.label);
-        const col=isInc?"var(--keep)":(CAT_COLORS[cat]||CAT_COLORS["기타"]);
+        const cat=isInc?incCatOf(it.label):catOf(it.label);
+        const col=isInc?(INC_CAT_COLORS[cat]||INC_CAT_COLORS["기타"]):(CAT_COLORS[cat]||CAT_COLORS["기타"]);
         const row=document.createElement("div"); row.className="lrow";
         row.innerHTML='<span class="lrow-cat" style="color:'+col+'">'+cat+'</span>'
           +'<span class="lrow-lab"></span>'

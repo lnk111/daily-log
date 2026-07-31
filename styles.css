@@ -573,6 +573,20 @@
 .lbar-col.sat .lbar-day{ color:var(--try); }
 .lbar-col:hover .lbar-fill{ opacity:1; }
 
+/* 수입 추이 — 스택 막대 */
+.inc-trend{ display:flex; align-items:flex-end; justify-content:space-between; gap:7px; height:170px; }
+.itr-col{ flex:1 1 0; display:flex; flex-direction:column; align-items:center; gap:6px;
+  height:100%; justify-content:flex-end; min-width:0; cursor:default; }
+.itr-stack{ width:100%; max-width:34px; display:flex; flex-direction:column-reverse;
+  border-radius:6px; overflow:hidden; transition:height .4s cubic-bezier(.22,1,.36,1); }
+.itr-seg{ transition:height .4s cubic-bezier(.22,1,.36,1); }
+.itr-lab{ font-size:11px; font-weight:600; color:var(--cap); white-space:nowrap; }
+.itr-lab.cur{ color:var(--ink); font-weight:800; }
+.inc-legend{ display:flex; flex-wrap:wrap; gap:8px 12px; margin-top:16px; padding-top:14px;
+  border-top:1px solid var(--line); }
+.inc-lg{ display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--sub); }
+.inc-lg-dot{ width:9px; height:9px; border-radius:3px; flex:none; }
+
 /* 카테고리별 지출 */
 .lcat{ padding:9px 0; }
 .lcat-top{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
