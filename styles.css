@@ -284,6 +284,12 @@
   .rev-title{font-size:20px; font-weight:800; line-height:1.2; color:var(--ink);}
   .rev-stat{font-size:13px; color:var(--cap); margin-top:4px; margin-bottom:18px;}
   .rev-stat b{color:var(--accent);}
+  /* 월 이동 화살표를 제목 양옆에 배치 */
+  .rev-title-nav{display:flex; align-items:center; gap:6px; margin-bottom:18px;}
+  .rev-title-nav .rev-title-center{flex:1; min-width:0; text-align:center;}
+  .rev-title-nav .rev-title-center .rev-stat{margin-bottom:0;}
+  .rev-title-nav .nav-arrow{flex:none; color:var(--sub);}
+  .rev-title-nav .nav-arrow:hover{color:var(--ink);}
   .kpt-grid{display:flex; flex-direction:column; gap:16px;}
   .kgroup{margin-top:0;}
   .kgroup > .kh{display:flex; align-items:center; gap:8px; font-size:15px; font-weight:700; margin-bottom:12px;}
@@ -572,6 +578,10 @@
 .lbar-col.sun .lbar-day{ color:var(--prob); }
 .lbar-col.sat .lbar-day{ color:var(--try); }
 .lbar-col:hover .lbar-fill{ opacity:1; }
+
+/* 자금 흐름 인포그래픽 */
+.led-flow-block #ledFlow{ background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:10px 6px; }
+.led-flow-block #ledFlow svg{ display:block; width:100%; height:auto; }
 
 /* 수입 추이 — 스택 막대 */
 .inc-trend{ display:flex; align-items:flex-end; justify-content:space-between; gap:7px; height:170px; }

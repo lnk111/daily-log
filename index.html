@@ -231,13 +231,20 @@
           </div>
           <div class="cal-nav">
             <button class="report-btn" id="ledReportBtn" aria-label="이 달 리포트">📄 리포트</button>
-            <button class="icon-btn" id="ledPrev" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-            <button class="icon-btn" id="ledNext" aria-label="다음"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
           </div>
         </div>
-        <div class="rev-title-block">
-          <div class="rev-title" id="ledTitle">—</div>
-          <div class="rev-stat" id="ledStat"></div>
+        <div class="rev-title-block rev-title-nav">
+          <button class="icon-btn nav-arrow" id="ledPrev" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div class="rev-title-center">
+            <div class="rev-title" id="ledTitle">—</div>
+            <div class="rev-stat" id="ledStat"></div>
+          </div>
+          <button class="icon-btn nav-arrow" id="ledNext" aria-label="다음"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+
+        <div class="led-block led-flow-block">
+          <div class="led-h">자금 흐름 <span class="led-hint">이렇게 벌고 썼어요</span></div>
+          <div id="ledFlow"></div>
         </div>
 
         <div class="led-summary" id="ledSummary"></div>

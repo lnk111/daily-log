@@ -278,22 +278,44 @@
   }
 
   /* 내용(label) 키워드 기반 자동 분류 — 데이터 구조 변경 없음 */
+  // 지출 카테고리 메타: 고정비(fixed)/변동비(var) 그룹 · 아이콘 · 색상
+  const CAT_META={
+    "주거·관리":{group:"fixed",icon:"🏠",color:"#5b5bd6"},
+    "통신·구독":{group:"fixed",icon:"📱",color:"#3f7cc0"},
+    "보험·세금":{group:"fixed",icon:"🛡️",color:"#7a8a99"},
+    "용돈":    {group:"fixed",icon:"🧍",color:"#8C7459"},
+    "외식·배달":{group:"var",  icon:"🍴",color:"#d9694f"},
+    "식료품":  {group:"var",  icon:"🛒",color:"#d98a2b"},
+    "카페·간식":{group:"var",  icon:"☕",color:"#c9974f"},
+    "교통·차량":{group:"var",  icon:"🚗",color:"#4f7cc0"},
+    "의료·건강":{group:"var",  icon:"➕",color:"#2f9e69"},
+    "쇼핑":    {group:"var",  icon:"🛍️",color:"#c05fa8"},
+    "문화·여가":{group:"var",  icon:"🎬",color:"#9b6dd6"},
+    "경조사":  {group:"var",  icon:"🎁",color:"#7a8a99"},
+    "기타":    {group:"var",  icon:"💬",color:"#a1a1aa"}
+  };
   const CAT_RULES=[
-    {cat:"식비",     kw:["밥","점심","저녁","아침","커피","카페","스벅","스타벅스","배달","식당","마트","편의점","음식","간식","치킨","분식","피자","버거","술","맥주","회식","브런치","디저트","빵","김밥","라면"]},
-    {cat:"교통",     kw:["택시","버스","지하철","기차","ktx","srt","주유","기름","카카오t","교통","주차","톨게이트","하이패스","항공","비행기","렌터카"]},
-    {cat:"주거·통신", kw:["월세","관리비","전기","가스","수도","인터넷","통신","핸드폰","휴대폰","요금","공과금","렌트","보증금","도시가스"]},
-    {cat:"생활",     kw:["다이소","쿠팡","생필품","세제","휴지","생활","이케아","잡화","마켓컬리"]},
-    {cat:"건강",     kw:["병원","약국","약","헬스","운동","치과","한의원","진료","영양제","pt","필라테스","요가"]},
-    {cat:"문화·여가", kw:["영화","책","넷플릭스","구독","게임","여행","공연","전시","유튜브","티빙","웨이브","콘서트","노래방","숙박","호텔"]},
-    {cat:"쇼핑",     kw:["옷","의류","신발","쇼핑","화장품","가방","무신사","백화점","올리브영","악세"]},
-    {cat:"경조사",   kw:["축의금","조의금","경조사","선물","용돈","기부","부의"]}
+    {cat:"통신·구독", kw:["통신","핸드폰","휴대폰","인터넷","요금제","데이터","넷플릭스","구독","프리미엄","티빙","웨이브","디즈니","멤버십","스포티파이","왓챠","유튜브 프리미엄"]},
+    {cat:"보험·세금", kw:["보험","세금","국민연금","건강보험","실비","자동차보험","연금","재산세","소득세","납부"]},
+    {cat:"주거·관리", kw:["월세","관리비","전기","가스","수도","공과금","도시가스","렌트","보증금","전세","대출이자","월납"]},
+    {cat:"용돈",     kw:["용돈","비상금","경조사"]},
+    {cat:"외식·배달", kw:["배달","외식","식당","치킨","피자","버거","회식","배민","요기요","쿠팡이츠","족발","보쌈","점심","저녁","맛집","분식","술","맥주"]},
+    {cat:"카페·간식", kw:["카페","커피","스벅","스타벅스","이디야","간식","디저트","빵","베이커리","도넛","케이크","아이스크림","브런치"]},
+    {cat:"식료품",   kw:["마트","장보기","식료품","마켓컬리","쿠팡","이마트","홈플러스","생필품","다이소","편의점","과일","정육","세제","휴지"]},
+    {cat:"교통·차량", kw:["택시","버스","지하철","기차","ktx","srt","주유","기름","주차","교통","하이패스","톨게이트","카카오t","렌터카","항공","비행기"]},
+    {cat:"의료·건강", kw:["병원","약국","약","헬스","pt","운동","치과","한의원","영양제","필라테스","요가","진료","건강"]},
+    {cat:"쇼핑",     kw:["옷","의류","신발","쇼핑","화장품","가방","무신사","올리브영","백화점","악세","가전","이케아"]},
+    {cat:"문화·여가", kw:["영화","책","게임","여행","공연","전시","노래방","숙박","호텔","콘서트","클래스","유튜브"]},
+    {cat:"경조사비", kw:["축의금","조의금","부의","화환","경조"]}
   ];
   function catOf(label){
     const s=String(label||"").toLowerCase();
-    for(const r of CAT_RULES){ for(const k of r.kw){ if(s.indexOf(k)>=0) return r.cat; } }
+    for(const r of CAT_RULES){ for(const k of r.kw){ if(s.indexOf(k.toLowerCase())>=0) return r.cat==="경조사비"?"경조사":r.cat; } }
     return "기타";
   }
-  const CAT_COLORS={ "식비":"#d9694f","교통":"#3f7cc0","주거·통신":"#5b5bd6","생활":"#8C7459","건강":"#2f9e69","문화·여가":"#c05fa8","쇼핑":"#d98a2b","경조사":"#7a8a99","기타":"#a1a1aa" };
+  const CAT_COLORS={}; for(const k in CAT_META) CAT_COLORS[k]=CAT_META[k].color;
+  function catGroup(c){ return (CAT_META[c]||CAT_META["기타"]).group; }
+  function catIcon(c){ return (CAT_META[c]||CAT_META["기타"]).icon; }
 
   // 수입원 자동 분류 (N잡러용) — 더 구체적인 규칙을 앞에 두어 먼저 매칭시킴
   const INC_CAT_RULES=[
@@ -313,6 +335,8 @@
   }
   const INC_CAT_COLORS={ "월급":"#2f9e69","부업":"#3f7cc0","배달":"#d98a2b","유튜브":"#d9694f","블로그":"#5b5bd6","블로그 광고":"#9b6dd6","협찬":"#c05fa8","애드센스":"#14b8a6","기타":"#a1a1aa" };
   const INC_ORDER=["월급","부업","배달","유튜브","협찬","애드센스","블로그 광고","블로그","기타"];   // 스택 쌓는 순서(아래→위)
+  const INC_ICONS={ "월급":"💰","부업":"💻","배달":"🛵","유튜브":"📺","협찬":"🤝","애드센스":"📊","블로그 광고":"📝","블로그":"✍️","기타":"💬" };
+  function incIcon(c){ return INC_ICONS[c]||INC_ICONS["기타"]; }
 
   function renderLedger(){
     const r=ledRange();
@@ -360,6 +384,7 @@
       +revFinCard("수입",inc)+revFinCard("지출",exp)+revFinCard("투자 매수",buy)+revFinCard("적금",sav)
       +'</div>';
 
+    renderMoneyFlow();
     renderIncTrend();
     renderLedBars(r,dayExp);
     renderCatBreakdown("ledIncCats",incCatSum,inc,INC_CAT_COLORS,"아직 수입 내역이 없어요.");
@@ -410,6 +435,110 @@
       frag.appendChild(row);
     });
     box.appendChild(frag);
+  }
+
+  // ===== 자금 흐름 인포그래픽 (가계부 탭 상단 히어로) =====
+  function mfWon(n){ return "₩"+Math.round(n||0).toLocaleString("ko-KR"); }
+  function mfCap(arr,n){                 // 상위 n개 + 나머지 '기타'
+    if(arr.length<=n) return arr;
+    const head=arr.slice(0,n-1), rest=arr.slice(n-1);
+    const s=rest.reduce((a,o)=>a+o.val,0);
+    head.push({label:"기타",val:s,icon:"💬",color:"#a1a1aa"});
+    return head;
+  }
+  function renderMoneyFlow(){
+    const box=document.getElementById("ledFlow"); if(!box) return;
+    const a=aggPeriod(ledRange());
+    if(a.inc<=0){ box.innerHTML='<div class="kempty">이 기간 수입 내역이 없어요. 수입을 기록하면 자금 흐름이 그려져요.</div>'; return; }
+    const inc=a.inc, exp=a.exp, remain=Math.max(0,inc-exp);
+    const rate=inc>0?Math.round(remain/inc*1000)/10:0;
+    const incItems=mfCap(Object.keys(a.incCat).map(c=>({label:c,val:a.incCat[c],icon:incIcon(c),color:INC_CAT_COLORS[c]||"#6aa0dd"})).sort((x,y)=>y.val-x.val),5);
+    const fixed=[],vary=[];
+    Object.keys(a.expCat).forEach(c=>{ const v=a.expCat[c]; if(!v)return;
+      const it={label:c,val:v,icon:catIcon(c),color:CAT_COLORS[c]||"#a1a1aa"};
+      (catGroup(c)==="fixed"?fixed:vary).push(it);
+    });
+    fixed.sort((x,y)=>y.val-x.val); vary.sort((x,y)=>y.val-x.val);
+    const fx=mfCap(fixed,5), vr=mfCap(vary,7);
+    const fxTot=fixed.reduce((s,o)=>s+o.val,0), vrTot=vary.reduce((s,o)=>s+o.val,0);
+
+    // 레이아웃
+    const W=400, itemH=34, remH=118, remTop=30;
+    const fixStart=remTop+remH+22;
+    const fixC=fx.map((_,i)=>fixStart+i*itemH+itemH/2);
+    const varStart=fixStart+Math.max(1,fx.length)*itemH+24;
+    const varC=vr.map((_,i)=>varStart+i*itemH+itemH/2);
+    const H=Math.max(varStart+Math.max(1,vr.length)*itemH+16, 380);
+    const avg=arr=>arr.length?arr.reduce((s,v)=>s+v,0)/arr.length:0;
+    const fixBoxCy=fx.length?avg(fixC):fixStart+18;
+    const varBoxCy=vr.length?avg(varC):varStart+18;
+    const HUBX=178,HUBR=44,HUBY=(fixBoxCy+varBoxCy)/2;
+    const incX=8,incW=98,incH=52;
+    const incSpan=Math.min(H-70,Math.max(120,(incItems.length-1)*104));
+    const midY=H/2;
+    const incC=incItems.map((_,i)=>incItems.length>1?(midY-incSpan/2+i*(incSpan/(incItems.length-1))):midY);
+    const remBox={x:250,y:remTop,w:144,h:remH}, itemX=298, itemRight=394;
+    const fixBox={x:214,y:fixBoxCy-22,w:68,h:44}, varBox={x:214,y:varBoxCy-22,w:68,h:44};
+    const maxV=Math.max(remain,fxTot,vrTot,...incItems.map(o=>o.val),1);
+    const sc=40/maxV, th=v=>Math.max(1.6,v*sc);
+
+    // 채워진 곡선 띠 — 양끝에서 수평 접선으로 매끄럽게 이어짐
+    const band=(x0,y0,x1,y1,t0,t1,c,op)=>{ const xm=(x0+x1)/2, a=t0/2, b=t1/2;
+      return '<path d="M'+x0.toFixed(1)+' '+(y0-a).toFixed(1)+' C'+xm.toFixed(1)+' '+(y0-a).toFixed(1)+' '+xm.toFixed(1)+' '+(y1-b).toFixed(1)+' '+x1.toFixed(1)+' '+(y1-b).toFixed(1)
+        +' L'+x1.toFixed(1)+' '+(y1+b).toFixed(1)+' C'+xm.toFixed(1)+' '+(y1+b).toFixed(1)+' '+xm.toFixed(1)+' '+(y0+a).toFixed(1)+' '+x0.toFixed(1)+' '+(y0+a).toFixed(1)+' Z" fill="'+c+'" opacity="'+op+'"/>'; };
+    const rr=(x,y,w,h,r,f,st)=>'<rect x="'+x+'" y="'+y.toFixed(1)+'" width="'+w+'" height="'+h+'" rx="'+r+'" fill="'+f+'"'+(st?' stroke="'+st+'" stroke-width="1"':'')+'/>';
+    const tx=(x,y,an,s,sz,f,w)=>'<text x="'+x+'" y="'+y.toFixed(1)+'" text-anchor="'+an+'" font-size="'+sz+'" font-weight="'+(w||400)+'" fill="'+f+'" font-family="Pretendard,sans-serif">'+esc(s)+'</text>';
+    const stackStart=(arr,cy)=>cy-arr.reduce((s,v)=>s+v,0)/2;   // 세로 중앙에 쌓기 시작점
+
+    let R="",N="",L="";
+    // 수입 → 허브 (허브 왼쪽 가장자리에 값 순서대로 쌓기)
+    const incTh=incItems.map(it=>th(it.val));
+    let hy=stackStart(incTh,HUBY);
+    incItems.forEach((it,i)=>{ const ty=hy+incTh[i]/2; hy+=incTh[i];
+      R+=band(incX+incW, incC[i], HUBX-HUBR+3, ty, incTh[i], incTh[i], "#6aa0dd", 0.4); });
+    // 허브 → 잔여/고정/변동 (허브 오른쪽 가장자리에 쌓기)
+    const outs=[{y:remBox.y+58,t:th(remain),c:"#6cc39a",x:remBox.x}];
+    if(fxTot>0) outs.push({y:fixBoxCy,t:th(fxTot),c:"#e0897c",x:fixBox.x});
+    if(vrTot>0) outs.push({y:varBoxCy,t:th(vrTot),c:"#e0897c",x:varBox.x});
+    let oy=stackStart(outs.map(o=>o.t),HUBY);
+    outs.forEach(o=>{ const sy=oy+o.t/2; oy+=o.t; R+=band(HUBX+HUBR-3, sy, o.x, o.y, o.t, o.t, o.c, 0.4); });
+    // 고정/변동 → 세부 항목 (박스 오른쪽 가장자리에 쌓기)
+    let fyy=stackStart(fx.map(it=>th(it.val)),fixBoxCy);
+    fx.forEach((it,i)=>{ const t=th(it.val); const sy=fyy+t/2; fyy+=t;
+      R+=band(fixBox.x+fixBox.w, sy, itemX, fixC[i], t, Math.max(2,t), "#e3a99d", 0.5); });
+    let vyy=stackStart(vr.map(it=>th(it.val)),varBoxCy);
+    vr.forEach((it,i)=>{ const t=th(it.val); const sy=vyy+t/2; vyy+=t;
+      R+=band(varBox.x+varBox.w, sy, itemX, varC[i], t, Math.max(2,t), "#e3a99d", 0.5); });
+
+    incItems.forEach((it,i)=>{ const cy=incC[i];
+      N+=rr(incX,cy-incH/2,incW,incH,11,"var(--bg)","var(--line)");
+      L+=tx(incX+19,cy+7,"middle",it.icon,17,"#000",400);
+      L+=tx(incX+36,cy-4,"start",it.label,10.5,"var(--cap)",700);
+      L+=tx(incX+36,cy+12,"start",mfWon(it.val),11,"#2b6cb0",800);
+    });
+    N+='<circle cx="'+HUBX+'" cy="'+HUBY.toFixed(1)+'" r="'+HUBR+'" fill="#eef4fb" stroke="#7fa8db" stroke-width="1.5"/>';
+    L+=tx(HUBX,HUBY-13,"middle","💰",20,"#000",400);
+    L+=tx(HUBX,HUBY+7,"middle","총수입",9.5,"#5a7ba8",700);
+    L+=tx(HUBX,HUBY+22,"middle",mfWon(inc),10.5,"#2b6cb0",800);
+    N+=rr(remBox.x,remBox.y,remBox.w,remBox.h,14,"#e9f7ef","#a9dcc2");
+    const rcx=remBox.x+remBox.w/2;
+    L+=tx(rcx,remBox.y+22,"middle","🐷 이번 달 잔여 자금",10,"#3f9268",700);
+    L+=tx(rcx,remBox.y+48,"middle",mfWon(remain),17,"#2f9e69",800);
+    L+='<line x1="'+(remBox.x+14)+'" y1="'+(remBox.y+62)+'" x2="'+(remBox.x+remBox.w-14)+'" y2="'+(remBox.y+62)+'" stroke="#bfe3cf" stroke-width="1"/>';
+    L+=tx(rcx,remBox.y+82,"middle","저축률",10,"#3f9268",600);
+    L+=tx(rcx,remBox.y+101,"middle",rate+"%",16,"#2f9e69",800);
+    [{b:fixBox,cy:fixBoxCy,label:"고정비",v:fxTot,ic:"🏠",show:fxTot>0},{b:varBox,cy:varBoxCy,label:"변동비",v:vrTot,ic:"📉",show:vrTot>0}].forEach(g=>{ if(!g.show)return;
+      N+=rr(g.b.x,g.b.y,g.b.w,g.b.h,10,"#fdeee9","#f2cabd");
+      L+=tx(g.b.x+g.b.w/2,g.cy-2,"middle",g.ic+" "+g.label,10.5,"#c05f4a",800);
+      L+=tx(g.b.x+g.b.w/2,g.cy+13,"middle",mfWon(g.v),9,"#c05f4a",600);
+    });
+    const row=(it,cy)=>{ L+=tx(itemX+4,cy+4,"start",it.icon,12,"#000",400);
+      L+=tx(itemX+22,cy+4,"start",it.label,10,"var(--sub)",600);
+      L+=tx(itemRight,cy+4,"end",mfWon(it.val),10,"var(--ink)",700); };
+    fx.forEach((it,i)=>row(it,fixC[i]));
+    vr.forEach((it,i)=>row(it,varC[i]));
+
+    box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="이번 기간 자금 흐름도">'+R+N+L+'</svg>';
   }
 
   // 최근 N개 기간(월간=6개월 / 주간=8주)의 시작·끝·라벨 배열. 현재 기간이 마지막.
