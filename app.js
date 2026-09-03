@@ -27,6 +27,7 @@
   let fb=null;           // firebase database ref (logs/{code}) when connected
   let curFin=emptyFin(); // finance entries for the day on screen
   let allocs={};         // { 'YYYY-MM': 투자 배정금액 }
+  let monthly={};        // { 'YYYY-MM': {grow, drop, boost} } 달력 월간 회고
 
   /* ---------- date helpers ---------- */
   const WD=["일","월","화","수","목","금","토"];
@@ -43,6 +44,11 @@
     document.getElementById("dSub").textContent=d.getFullYear()+" · "+WD[d.getDay()]+"요일";
     document.getElementById("datePicker").value=current;
     document.getElementById("headDate").textContent=d.getFullYear()+". "+pad(d.getMonth()+1)+". "+pad(d.getDate())+" ("+WD[d.getDay()]+")";
+    // 주말(토·일)엔 '회사' 대신 '점심'
+    const weekend=(d.getDay()===0||d.getDay()===6);
+    const wl=document.getElementById("workLogLabel");
+    if(wl) wl.textContent=weekend?"🍚 점심":"🏢 회사";
+    if(els.work) els.work.placeholder=weekend?"점심·휴식, 주말에 한 일과 생각…":"현장·고객·팀 이슈, 오늘 처리한 일과 결정…";
   }
   function grow(t){t.style.height="auto";const min=t.classList.contains("kpt-line")?24:120;t.style.height=Math.max(t.scrollHeight,min)+"px";}
   function growAll(){ FIELDS.forEach(f=>{ if(els[f]) grow(els[f]); }); }
@@ -177,10 +183,26 @@
       grid.appendChild(cell);
     }
     document.getElementById("calStat").innerHTML="이 달에 <span>"+recorded+"일</span> 기록했어요.";
+    loadMonthly();
   }
   document.getElementById("calPrev").onclick=()=>{calMonth.setMonth(calMonth.getMonth()-1);renderCalendar();};
   document.getElementById("calNext").onclick=()=>{calMonth.setMonth(calMonth.getMonth()+1);renderCalendar();};
   document.getElementById("calToday").onclick=()=>{const d=new Date();d.setDate(1);calMonth=d;renderCalendar();};
+
+  /* 달력 월간 회고 (성장/버릴 것/키울 것) */
+  const MR_FIELDS=[["mrGrow","grow"],["mrDrop","drop"],["mrBoost","boost"]];
+  let mrTimer=null;
+  function calYm(){ return calMonth.getFullYear()+"-"+pad(calMonth.getMonth()+1); }
+  function growMr(el){ el.style.height="auto"; el.style.height=Math.max(el.scrollHeight,26)+"px"; }
+  function loadMonthly(){ const o=monthly[calYm()]||{};
+    MR_FIELDS.forEach(([id,k])=>{ const el=document.getElementById(id); if(el){ el.value=o[k]||""; growMr(el); } }); }
+  function persistMonthly(){ store.set("monthly",JSON.stringify(monthly)); if(fb) fb.child("_monthly").set(monthly); }
+  function saveMonthly(){ const ym=calYm(), o={}; let empty=true;
+    MR_FIELDS.forEach(([id,k])=>{ const el=document.getElementById(id); o[k]=el?el.value:""; if((o[k]||"").trim()) empty=false; });
+    if(empty) delete monthly[ym]; else monthly[ym]=o;
+    clearTimeout(mrTimer); mrTimer=setTimeout(persistMonthly,600); }
+  MR_FIELDS.forEach(([id])=>{ const el=document.getElementById(id);
+    if(el) el.addEventListener("input",()=>{ growMr(el); saveMonthly(); }); });
 
   /* ===================== REVIEW ===================== */
   let revMode="week";                 // 'week' | 'month'
@@ -437,16 +459,21 @@
     box.appendChild(frag);
   }
 
-  // ===== 자금 흐름 인포그래픽 (가계부 탭 상단 히어로) =====
+  // ===== 자금 흐름 (가계부 탭) — 리포트와 동일한 산키를 작게 표시 =====
+  function renderMoneyFlow(){
+    const box=document.getElementById("ledFlow"); if(!box) return;
+    box.innerHTML=buildSankeySVG(aggPeriod(ledRange()));
+  }
+  // (미사용) 이전 인포그래픽 버전 — 필요 시 참고용 보관
   function mfWon(n){ return "₩"+Math.round(n||0).toLocaleString("ko-KR"); }
-  function mfCap(arr,n){                 // 상위 n개 + 나머지 '기타'
+  function mfCap(arr,n){
     if(arr.length<=n) return arr;
     const head=arr.slice(0,n-1), rest=arr.slice(n-1);
     const s=rest.reduce((a,o)=>a+o.val,0);
     head.push({label:"기타",val:s,icon:"💬",color:"#a1a1aa"});
     return head;
   }
-  function renderMoneyFlow(){
+  function renderMoneyFlowInfographic(){
     const box=document.getElementById("ledFlow"); if(!box) return;
     const a=aggPeriod(ledRange());
     if(a.inc<=0){ box.innerHTML='<div class="kempty">이 기간 수입 내역이 없어요. 수입을 기록하면 자금 흐름이 그려져요.</div>'; return; }
@@ -910,6 +937,7 @@
     fb.on("value",snap=>{
       const val=snap.val()||{};
       allocs=val._alloc||{}; delete val._alloc;
+      monthly=val._monthly||{}; delete val._monthly;
       const savedAccts=val._accts; delete val._accts;
       entries=val;
       if(Array.isArray(savedAccts)&&savedAccts.length){ acctList=savedAccts; }
@@ -917,7 +945,7 @@
         acctList=deriveAccts();                         // 저장된 계좌가 없으면 기존 매수·배정 기록에서 복원
         if(acctList.length && fb) fb.child("_accts").set(acctList);   // 복원한 계좌를 한 번 저장
       }
-      store.set("alloc",JSON.stringify(allocs)); store.set("accts",JSON.stringify(acctList));
+      store.set("alloc",JSON.stringify(allocs)); store.set("accts",JSON.stringify(acctList)); store.set("monthly",JSON.stringify(monthly));
       if(currentView==="record") syncDayIntoDOM();
       if(currentView==="calendar") renderCalendar();
       if(currentView==="review") renderReview();
@@ -988,7 +1016,7 @@
   };
   // 화면을 즉시 빈 상태로 (생활비·투자·적금·배정 모두 0/빈칸)
   function clearLocalDisplay(){
-    entries={}; allocs={}; acctList=[]; curFin=emptyFin();
+    entries={}; allocs={}; monthly={}; acctList=[]; curFin=emptyFin();
     loadDayFromCache();
     if(currentView==="calendar") renderCalendar();
     if(currentView==="review") renderReview();
@@ -996,7 +1024,7 @@
   // 이 기기에 저장된 복사본 비움 (Firebase의 내 기록은 그대로 안전)
   async function clearLocalStore(){
     try{ const keys=await store.list("log:"); for(const k of keys){ await store.set(k,""); } }catch(e){}
-    try{ await store.set("alloc",""); await store.set("accts",""); }catch(e){}
+    try{ await store.set("alloc",""); await store.set("accts",""); await store.set("monthly",""); }catch(e){}
   }
   document.getElementById("logoutBtn").onclick=async()=>{
     try{ await firebase.auth().signOut(); }catch(e){}   // 로그아웃 → onLogout이 화면·저장본을 비움
@@ -1270,6 +1298,7 @@
     const keys=await store.list("log:");
     for(const k of keys){ const v=await store.get(k); if(v){ try{ entries[k.slice(4)]=JSON.parse(v); }catch(e){} } }
     const a=await store.get("alloc"); if(a){ try{ allocs=JSON.parse(a)||{}; }catch(e){} }
+    const mo=await store.get("monthly"); if(mo){ try{ monthly=JSON.parse(mo)||{}; }catch(e){} }
     const ac=await store.get("accts"); if(ac){ try{ const x=JSON.parse(ac); if(Array.isArray(x)&&x.length) acctList=x; }catch(e){} }
   }
   (async function init(){

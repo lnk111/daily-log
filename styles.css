@@ -579,9 +579,22 @@
 .lbar-col.sat .lbar-day{ color:var(--try); }
 .lbar-col:hover .lbar-fill{ opacity:1; }
 
-/* 자금 흐름 인포그래픽 */
-.led-flow-block #ledFlow{ background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:10px 6px; }
-.led-flow-block #ledFlow svg{ display:block; width:100%; height:auto; }
+/* 자금 흐름 — 리포트 산키를 작게 */
+.led-flow-block #ledFlow{ background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:8px; }
+.led-flow-block #ledFlow svg{ display:block; width:100%; height:auto; max-width:380px; margin:0 auto; }
+.led-flow-block #ledFlow .rpt-note{ font-size:10.5px; text-align:center; margin-top:6px; }
+
+/* 달력 월간 회고 */
+.cal-reflect{ margin-top:24px; }
+.cal-reflect-h{ font-size:13px; font-weight:700; color:var(--ink); margin-bottom:12px; }
+.cal-reflect .rf{ display:block; margin-bottom:12px; }
+.cal-reflect .rf-lab{ display:block; font-size:12.5px; font-weight:600; margin-bottom:5px; }
+.cal-reflect .rf.grow .rf-lab{ color:#2f9e69; }
+.cal-reflect .rf.drop .rf-lab{ color:#d9694f; }
+.cal-reflect .rf.boost .rf-lab{ color:#5b5bd6; }
+.cal-reflect textarea{ width:100%; border:1px solid var(--line); border-radius:10px; padding:9px 11px;
+  font-family:inherit; font-size:14px; color:var(--ink); background:var(--bg); resize:none; overflow:hidden; line-height:1.5; }
+.cal-reflect textarea:focus{ outline:none; border-color:var(--indigo); }
 
 /* 수입 추이 — 스택 막대 */
 .inc-trend{ display:flex; align-items:flex-end; justify-content:space-between; gap:7px; height:170px; }

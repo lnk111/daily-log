@@ -114,7 +114,7 @@
         <div class="sub-view active" data-seg="log">
         <section class="section"><h2>🌅 아침 <span class="en">Log</span></h2>
           <textarea class="ruled" data-field="morning" placeholder="오늘 아침 어떻게 시작했나요? 컨디션, 다짐, 첫 할 일…"></textarea></section>
-        <section class="section"><h2>🏢 회사 <span class="en">Log</span></h2>
+        <section class="section"><h2><span id="workLogLabel">🏢 회사</span> <span class="en">Log</span></h2>
           <textarea class="ruled" data-field="work" placeholder="현장·고객·팀 이슈, 오늘 처리한 일과 결정…"></textarea></section>
         <section class="section"><h2>🌙 저녁 <span class="en">Log</span></h2>
           <textarea class="ruled" data-field="evening" placeholder="하루를 닫으며 — 마무리한 일, 내일로 넘긴 일, 느낀 점…"></textarea></section>
@@ -218,6 +218,16 @@
           <span class="swatch"><i class="ring"></i>오늘</span>
         </div>
         <div class="cal-stat" id="calStat"></div>
+
+        <div class="cal-reflect">
+          <div class="cal-reflect-h">📆 이번 달 돌아보기</div>
+          <label class="rf grow"><span class="rf-lab">🌱 이번 달 가장 성장한 것</span>
+            <textarea id="mrGrow" rows="1" placeholder="한 가지만 적어보세요"></textarea></label>
+          <label class="rf drop"><span class="rf-lab">🗑️ 이번 달 버릴 것</span>
+            <textarea id="mrDrop" rows="1" placeholder="한 가지만 적어보세요"></textarea></label>
+          <label class="rf boost"><span class="rf-lab">🚀 다음 달 가장 크게 키울 것</span>
+            <textarea id="mrBoost" rows="1" placeholder="한 가지만 적어보세요"></textarea></label>
+        </div>
       </div>
     </section>
 
