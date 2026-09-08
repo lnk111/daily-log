@@ -330,8 +330,14 @@
     {cat:"문화·여가", kw:["영화","책","게임","여행","공연","전시","노래방","숙박","호텔","콘서트","클래스","유튜브"]},
     {cat:"경조사비", kw:["축의금","조의금","부의","화환","경조"]}
   ];
-  function catOf(label){
-    const s=String(label||"").toLowerCase();
+  const EXP_CATS=Object.keys(CAT_META);   // 지출 카테고리 선택지 (고정비 → 변동비 순)
+  // label 문자열 또는 fin 항목({label,amount,cat})을 받는다. 항목에 cat 오버라이드가 있으면 그걸 우선.
+  function catOf(item){
+    if(item && typeof item==="object"){
+      if(item.cat && CAT_META[item.cat]) return item.cat;
+      item=item.label;
+    }
+    const s=String(item||"").toLowerCase();
     for(const r of CAT_RULES){ for(const k of r.kw){ if(s.indexOf(k.toLowerCase())>=0) return r.cat==="경조사비"?"경조사":r.cat; } }
     return "기타";
   }
@@ -350,8 +356,14 @@
     {cat:"부업",      kw:["부업","사이드","스마트스토어","스토어","셀러","중고판매","당근","번개장터","외주","프리랜스","용역","강의","과외"]},
     {cat:"월급",      kw:["월급","급여","봉급","상여","보너스","성과급","연봉","본업","페이","임금","salary"]}
   ];
-  function incCatOf(label){
-    const s=String(label||"").toLowerCase();
+  const INC_CATS=INC_CAT_RULES.map(r=>r.cat).concat("기타");   // 수입원 선택지
+  const INC_CAT_SET=new Set(INC_CATS);
+  function incCatOf(item){
+    if(item && typeof item==="object"){
+      if(item.cat && INC_CAT_SET.has(item.cat)) return item.cat;
+      item=item.label;
+    }
+    const s=String(item||"").toLowerCase();
     for(const r of INC_CAT_RULES){ for(const k of r.kw){ if(s.indexOf(k.toLowerCase())>=0) return r.cat; } }
     return "기타";
   }
@@ -376,8 +388,8 @@
         inc+=finSum(f.inc); exp+=finSum(f.exp); buy+=finSum(f.buy); sav+=finSum(f.sav);
         dEx=finSum(f.exp);
         if(finHasContent(f)) daysRec++;
-        (f.inc||[]).forEach(x=>{ const a=+x.amount||0; items.push({date:ds,kind:"inc",label:x.label||"수입",amount:a}); const ic=incCatOf(x.label); incCatSum[ic]=(incCatSum[ic]||0)+a; });
-        (f.exp||[]).forEach(x=>{ const a=+x.amount||0; items.push({date:ds,kind:"exp",label:x.label||"지출",amount:a}); const c=catOf(x.label); catSum[c]=(catSum[c]||0)+a; });
+        (f.inc||[]).forEach((x,i)=>{ const a=+x.amount||0; const ic=incCatOf(x); items.push({date:ds,kind:"inc",idx:i,label:x.label||"수입",amount:a,cat:x.cat||""}); incCatSum[ic]=(incCatSum[ic]||0)+a; });
+        (f.exp||[]).forEach((x,i)=>{ const a=+x.amount||0; const c=catOf(x); items.push({date:ds,kind:"exp",idx:i,label:x.label||"지출",amount:a,cat:x.cat||""}); catSum[c]=(catSum[c]||0)+a; });
       }
       dayExp[ds]=dEx;
       cur.setDate(cur.getDate()+1);
@@ -592,7 +604,7 @@
     const byCat={}; let total=0; const cur=new Date(start);
     while(cur<=end){
       const f=(entries[ymd(cur)]||{}).fin;
-      if(f&&f.inc) f.inc.forEach(x=>{ const a=+x.amount||0; if(!a)return; const c=incCatOf(x.label); byCat[c]=(byCat[c]||0)+a; total+=a; });
+      if(f&&f.inc) f.inc.forEach(x=>{ const a=+x.amount||0; if(!a)return; const c=incCatOf(x); byCat[c]=(byCat[c]||0)+a; total+=a; });
       cur.setDate(cur.getDate()+1);
     }
     return {byCat,total};
@@ -650,10 +662,12 @@
       frag.appendChild(head);
       byDate[ds].sort((a,b)=>b.amount-a.amount).forEach(it=>{
         const isInc=it.kind==="inc";
-        const cat=isInc?incCatOf(it.label):catOf(it.label);
+        const cat=isInc?incCatOf(it):catOf(it);
         const col=isInc?(INC_CAT_COLORS[cat]||INC_CAT_COLORS["기타"]):(CAT_COLORS[cat]||CAT_COLORS["기타"]);
+        const opts=(isInc?INC_CATS:EXP_CATS).map(c=>'<option value="'+esc(c)+'"'+(c===cat?" selected":"")+'>'+esc(c)+'</option>').join("");
         const row=document.createElement("div"); row.className="lrow";
-        row.innerHTML='<span class="lrow-cat" style="color:'+col+'">'+cat+'</span>'
+        row.innerHTML='<select class="lrow-cat-sel" data-date="'+it.date+'" data-kind="'+it.kind+'" data-idx="'+it.idx+'"'
+            +(it.cat?' data-custom="1"':'')+' style="color:'+col+'" aria-label="카테고리 변경">'+opts+'</select>'
           +'<span class="lrow-lab"></span>'
           +'<span class="lrow-amt '+(isInc?"pos":"neg")+'">'+(isInc?"＋":"－")+won(it.amount)+'</span>';
         row.querySelector(".lrow-lab").textContent=it.label;
@@ -673,6 +687,24 @@
   document.getElementById("ledPrev").onclick=()=>{ if(ledMode==="week")ledAnchor.setDate(ledAnchor.getDate()-7); else ledAnchor.setMonth(ledAnchor.getMonth()-1); renderLedger(); };
   document.getElementById("ledNext").onclick=()=>{ if(ledMode==="week")ledAnchor.setDate(ledAnchor.getDate()+7); else ledAnchor.setMonth(ledAnchor.getMonth()+1); renderLedger(); };
 
+  /* 내역의 카테고리 직접 변경 (월간·주간 공통) — 자동분류 위에 수동 오버라이드 저장 */
+  function setEntryCat(date,kind,idx,cat){
+    const o=entries[date]; if(!o||!o.fin||!o.fin[kind]||!o.fin[kind][idx]) return;
+    const it=o.fin[kind][idx];
+    const auto=(kind==="inc"?incCatOf({label:it.label}):catOf({label:it.label}));
+    if(!cat||cat===auto) delete it.cat;      // 자동분류와 같으면 오버라이드 제거
+    else it.cat=cat;
+    if(date===current) curFin=cloneFin(o.fin);
+    persistDay(date,o,false);
+    showChip(fb?"동기화됨":"저장됨", fb?"cloud":"check");
+    renderLedger();
+    if(currentView==="record") renderFinance();
+  }
+  document.getElementById("ledList").addEventListener("change",e=>{
+    const sel=e.target.closest(".lrow-cat-sel"); if(!sel) return;
+    setEntryCat(sel.dataset.date, sel.dataset.kind, +sel.dataset.idx, sel.value);
+  });
+
   /* ===================== 월간 리포트 ===================== */
   const FIXED_CATS=new Set(["주거·통신"]);   // 고정비로 분류할 지출 카테고리
   function manW(n){ return Math.round(n/10000).toLocaleString("ko-KR")+"만"; }
@@ -684,8 +716,8 @@
       const f=(entries[ymd(cur)]||{}).fin;
       if(f){
         if(finHasContent(f)) daysRec++;
-        (f.inc||[]).forEach(x=>{ const a=+x.amount||0; if(!a)return; inc+=a; const c=incCatOf(x.label); incCat[c]=(incCat[c]||0)+a; });
-        (f.exp||[]).forEach(x=>{ const a=+x.amount||0; if(!a)return; exp+=a; const c=catOf(x.label); expCat[c]=(expCat[c]||0)+a; });
+        (f.inc||[]).forEach(x=>{ const a=+x.amount||0; if(!a)return; inc+=a; const c=incCatOf(x); incCat[c]=(incCat[c]||0)+a; });
+        (f.exp||[]).forEach(x=>{ const a=+x.amount||0; if(!a)return; exp+=a; const c=catOf(x); expCat[c]=(expCat[c]||0)+a; });
         buy+=finSum(f.buy); sav+=finSum(f.sav);
       }
       cur.setDate(cur.getDate()+1);
